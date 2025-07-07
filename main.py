@@ -1,21 +1,17 @@
-# main.py (Final Currency Divergence Version)
+# main.py (Final Advanced Version: Relative Sentiment + Risk Index)
 import json
 import feedparser
 from datetime import datetime, timezone
 import time
+import numpy as np
 
-# دیکشنری فیدهای RSS برای هر ارز اصلی
+# --- بخش دیکشنری RSS و کلیدواژه‌ها بدون تغییر ---
 CURRENCY_RSS_FEEDS = {
-    'USD': "https://www.investing.com/rss/news_1.rss",      # اخبار بازار آمریکا
-    'EUR': "https://www.investing.com/rss/news_4.rss",      # اخبار بازار اروپا
-    'GBP': "https://www.investing.com/rss/news_6.rss",      # اخبار بازار بریتانیا
-    'JPY': "https://www.investing.com/rss/news_3.rss",      # اخبار بازار ژاپن
-    'CAD': "https://www.investing.com/rss/news_10.rss",     # اخبار بازار کانادا
-    'AUD': "https://www.investing.com/rss/news_8.rss",      # اخبار بازار استرالیا
-    'CHF': "https://www.investing.com/rss/news_7.rss",      # اخبار بازار سوئیس
-    'World': "https://www.investing.com/rss/news_25.rss"    # اخبار عمومی جهان
+    'USD': "https://www.investing.com/rss/news_1.rss", 'EUR': "https://www.investing.com/rss/news_4.rss",
+    'GBP': "https://www.investing.com/rss/news_6.rss", 'JPY': "https://www.investing.com/rss/news_3.rss",
+    'CAD': "https://www.investing.com/rss/news_10.rss", 'AUD': "https://www.investing.com/rss/news_8.rss",
+    'CHF': "https://www.investing.com/rss/news_7.rss", 'World': "https://www.investing.com/rss/news_25.rss"
 }
-
 # کلیدواژه‌ها بدون تغییر باقی می‌مانند
 POSITIVE_KEYWORDS = [
     # سیاسی و دیپلماتیک
@@ -48,40 +44,66 @@ NEGATIVE_KEYWORDS = [
 ]
 def get_sentiment_for_feed(rss_url):
     """
-    برای یک فید RSS مشخص، امتیاز احساسات زمانی-وزنی را محاسبه می‌کند.
+    برای یک فید RSS، امتیاز وزنی و تعداد کل کلمات کلیدی را برمی‌گرداند.
     """
     try:
         feed = feedparser.parse(rss_url)
-        weighted_score = 0.0
+        weighted_score, total_keywords = 0.0, 0
         now_utc = datetime.now(timezone.utc)
-        for entry in feed.entries[:15]:
-            article_score = 0
+        for entry in feed.entries[:20]:
             text = (entry.get('title', '') + " " + entry.get('summary', '')).lower()
-            article_score += sum(1 for k in POSITIVE_KEYWORDS if k in text)
-            article_score -= sum(1 for k in NEGATIVE_KEYWORDS if k in text)
+            pos_count = sum(1 for k in POSITIVE_KEYWORDS if k in text)
+            neg_count = sum(1 for k in NEGATIVE_KEYWORDS if k in text)
+            
+            article_score = pos_count - neg_count
+            total_keywords += pos_count + neg_count
             
             if 'published_parsed' in entry:
                 article_time = datetime.fromtimestamp(time.mktime(entry.published_parsed), tz=timezone.utc)
                 age_hours = (now_utc - article_time).total_seconds() / 3600
                 weight = max(0, 1 - (age_hours / 24.0))
                 weighted_score += article_score * weight
-        return int(round(weighted_score))
+        return int(round(weighted_score)), total_keywords
     except:
-        return 0
+        return 0, 0
 
-def get_all_currency_sentiments():
+def generate_final_analysis():
     """
-    امتیاز احساسات را برای همه ارزهای تعریف شده محاسبه می‌کند.
+    تمام تحلیل‌ها را ترکیب کرده و خروجی نهایی شامل امتیازهای نسبی و شاخص ریسک را تولید می‌کند.
     """
-    all_sentiments = {}
-    for currency, rss_url in CURRENCY_RSS_FEEDS.items():
-        all_sentiments[currency] = get_sentiment_for_feed(rss_url)
+    raw_sentiments = {}
+    total_keyword_counts = {}
     
-    all_sentiments["last_updated"] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    return all_sentiments
+    # ۱. محاسبه امتیاز خام برای همه ارزها
+    for currency, rss_url in CURRENCY_RSS_FEEDS.items():
+        raw_sentiments[currency], total_keyword_counts[currency] = get_sentiment_for_feed(rss_url)
+
+    # ۲. محاسبه میانگین احساسات بازار (به جز اخبار جهانی)
+    market_scores = [v for k, v in raw_sentiments.items() if k != 'World']
+    average_sentiment = np.mean(market_scores) if market_scores else 0
+
+    # ۳. محاسبه امتیاز نسبی برای هر ارز
+    relative_sentiments = {
+        currency: round(score - average_sentiment, 2)
+        for currency, score in raw_sentiments.items()
+    }
+
+    # ۴. محاسبه شاخص ریسک یکپارچه (بر اساس تعداد کل کلمات کلیدی پیدا شده)
+    total_chatter = sum(total_keyword_counts.values())
+    risk_index = min(10, int(round(total_chatter / 5.0))) # نرمال‌سازی ساده
+
+    # ۵. ساخت خروجی نهایی
+    final_output = {
+        "risk_index": risk_index,
+        "average_sentiment": round(average_sentiment, 2),
+        "relative_sentiments": relative_sentiments,
+        "raw_sentiments": raw_sentiments,
+        "last_updated": datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    }
+    return final_output
 
 if __name__ == "__main__":
-    final_analysis = get_all_currency_sentiments()
+    analysis = generate_final_analysis()
     with open("sentiment.txt", "w") as f:
-        json.dump(final_analysis, f)
-    print(f"Currency sentiments updated: {final_analysis}")
+        json.dump(analysis, f)
+    print(f"Advanced analysis updated: {analysis}")
