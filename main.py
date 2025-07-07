@@ -3,9 +3,35 @@ import os, requests, random, json, feedparser, joblib, numpy as np
 from datetime import datetime, timedelta
 
 NEWS_RSS_URL = "https://www.investing.com/rss/news_25.rss"
-POSITIVE_KEYWORDS = ["agreement","deal","peace","truce","accord","resolution","talks","summit","cooperation","ceasefire","negotiation","successful","stability","détente","growth","recover","rebound","expansion","boom","strong","upbeat","beats estimates","better-than-expected","stimulus","easing","dovish","rate cut","surplus","employment","hiring","manufacturing","pmi","gdp","upward revision","optimism","confidence","rally","surge","gains","bullish","risk-on","record high","breakthrough","innovation","outperform","risk appetite"]
-NEGATIVE_KEYWORDS = ["conflict","sanction","crisis","war","uncertainty","dispute","tension","protest","deadlock","veto","threat","escalation","unrest","instability","geopolitical","recession","downturn","slowdown","contraction","inflation","fears","deficit","debt","worse-than-expected","disappointing","misses estimates","rate hike","tightening","hawkish","jobless","unemployment","layoffs","bankruptcy","default","bubble","panic","sell-off","crash","slump","tumble","losses","bearish","risk-off","volatile","fear","contagion","vix","correction","headwinds"]
+POSITIVE_KEYWORDS = [
+    # سیاسی و دیپلماتیک
+    "agreement", "deal", "peace", "truce", "accord", "resolution", "talks", "summit", 
+    "cooperation", "ceasefire", "negotiation", "successful", "stability", "détente",
+    
+    # اقتصادی مثبت
+    "growth", "recover", "rebound", "expansion", "boom", "strong", "upbeat", "beats estimates", 
+    "better-than-expected", "stimulus", "easing", "dovish", "rate cut", "surplus", 
+    "employment", "hiring", "manufacturing", "pmi", "gdp", "upward revision",
 
+    # احساسات بازار مثبت
+    "optimism", "confidence", "rally", "surge", "gains", "bullish", "risk-on", "record high",
+    "breakthrough", "innovation", "outperform", "risk appetite"
+]
+
+NEGATIVE_KEYWORDS = [
+    # سیاسی و ژئوپلیتیک
+    "conflict", "sanction", "crisis", "war", "uncertainty", "dispute", "tension", 
+    "protest", "deadlock", "veto", "threat", "escalation", "unrest", "instability", "geopolitical",
+
+    # اقتصادی منفی
+    "recession", "downturn", "slowdown", "contraction", "inflation", "fears", "deficit", "debt",
+    "worse-than-expected", "disappointing", "misses estimates", "rate hike", "tightening", 
+    "hawkish", "jobless", "unemployment", "layoffs", "bankruptcy", "default", "bubble",
+
+    # احساسات بازار منفی
+    "panic", "sell-off", "crash", "slump", "tumble", "losses", "bearish", "risk-off", 
+    "volatile", "fear", "contagion", "vix", "correction", "headwinds"
+]
 def get_political_sentiment():
     try:
         feed = feedparser.parse(NEWS_RSS_URL)
