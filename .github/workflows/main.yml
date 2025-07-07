@@ -13,7 +13,8 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.9'
-      - run: pip install requests feedparser scikit-learn joblib
+      - run:  pip install requests feedparser
+          pip install scikit-learn==1.4.2 joblib==1.4.2
       - env:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
         run: python main.py
