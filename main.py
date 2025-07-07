@@ -1,62 +1,87 @@
-# main.py (Final Corrected Version)
-import os, requests, random, json, feedparser, joblib, numpy as np
-from datetime import datetime, timedelta
+# main.py (Final Currency Divergence Version)
+import json
+import feedparser
+from datetime import datetime, timezone
+import time
 
-NEWS_RSS_URL = "https://www.investing.com/rss/news_25.rss"
-POSITIVE_KEYWORDS = ["agreement","deal","peace","truce","accord","resolution","talks","summit","cooperation","ceasefire","negotiation","successful","stability","détente","growth","recover","rebound","expansion","boom","strong","upbeat","beats estimates","better-than-expected","stimulus","easing","dovish","rate cut","surplus","employment","hiring","manufacturing","pmi","gdp","upward revision","optimism","confidence","rally","surge","gains","bullish","risk-on","record high","breakthrough","innovation","outperform","risk appetite"]
-NEGATIVE_KEYWORDS = ["conflict","sanction","crisis","war","uncertainty","dispute","tension","protest","deadlock","veto","threat","escalation","unrest","instability","geopolitical","recession","downturn","slowdown","contraction","inflation","fears","deficit","debt","worse-than-expected","disappointing","misses estimates","rate hike","tightening","hawkish","jobless","unemployment","layoffs","bankruptcy","default","bubble","panic","sell-off","crash","slump","tumble","losses","bearish","risk-off","volatile","fear","contagion","vix","correction","headwinds"]
+# دیکشنری فیدهای RSS برای هر ارز اصلی
+CURRENCY_RSS_FEEDS = {
+    'USD': "https://www.investing.com/rss/news_1.rss",      # اخبار بازار آمریکا
+    'EUR': "https://www.investing.com/rss/news_4.rss",      # اخبار بازار اروپا
+    'GBP': "https://www.investing.com/rss/news_6.rss",      # اخبار بازار بریتانیا
+    'JPY': "https://www.investing.com/rss/news_3.rss",      # اخبار بازار ژاپن
+    'CAD': "https://www.investing.com/rss/news_10.rss",     # اخبار بازار کانادا
+    'AUD': "https://www.investing.com/rss/news_8.rss",      # اخبار بازار استرالیا
+    'CHF': "https://www.investing.com/rss/news_7.rss",      # اخبار بازار سوئیس
+    'World': "https://www.investing.com/rss/news_25.rss"    # اخبار عمومی جهان
+}
 
-def get_political_sentiment():
+# کلیدواژه‌ها بدون تغییر باقی می‌مانند
+POSITIVE_KEYWORDS = [
+    # سیاسی و دیپلماتیک
+    "agreement", "deal", "peace", "truce", "accord", "resolution", "talks", "summit", 
+    "cooperation", "ceasefire", "negotiation", "successful", "stability", "détente",
+    
+    # اقتصادی مثبت
+    "growth", "recover", "rebound", "expansion", "boom", "strong", "upbeat", "beats estimates", 
+    "better-than-expected", "stimulus", "easing", "dovish", "rate cut", "surplus", 
+    "employment", "hiring", "manufacturing", "pmi", "gdp", "upward revision",
+
+    # احساسات بازار مثبت
+    "optimism", "confidence", "rally", "surge", "gains", "bullish", "risk-on", "record high",
+    "breakthrough", "innovation", "outperform", "risk appetite"
+]
+
+NEGATIVE_KEYWORDS = [
+    # سیاسی و ژئوپلیتیک
+    "conflict", "sanction", "crisis", "war", "uncertainty", "dispute", "tension", 
+    "protest", "deadlock", "veto", "threat", "escalation", "unrest", "instability", "geopolitical",
+
+    # اقتصادی منفی
+    "recession", "downturn", "slowdown", "contraction", "inflation", "fears", "deficit", "debt",
+    "worse-than-expected", "disappointing", "misses estimates", "rate hike", "tightening", 
+    "hawkish", "jobless", "unemployment", "layoffs", "bankruptcy", "default", "bubble",
+
+    # احساسات بازار منفی
+    "panic", "sell-off", "crash", "slump", "tumble", "losses", "bearish", "risk-off", 
+    "volatile", "fear", "contagion", "vix", "correction", "headwinds"
+]
+def get_sentiment_for_feed(rss_url):
+    """
+    برای یک فید RSS مشخص، امتیاز احساسات زمانی-وزنی را محاسبه می‌کند.
+    """
     try:
-        feed = feedparser.parse(NEWS_RSS_URL)
-        sentiment_score = 0
-        for entry in feed.entries[:30]:
-            # FIX: از .get() برای دسترسی امن به 'summary' استفاده می‌کنیم
-            title = entry.get('title', '').lower()
-            summary = entry.get('summary', '').lower()
-            full_text = title + " " + summary
-            sentiment_score += sum(1 for k in POSITIVE_KEYWORDS if k in full_text)
-            sentiment_score -= sum(1 for k in NEGATIVE_KEYWORDS if k in full_text)
-        return sentiment_score
-    except Exception as e:
-        print(f"ERROR in RSS parsing: {e}")
+        feed = feedparser.parse(rss_url)
+        weighted_score = 0.0
+        now_utc = datetime.now(timezone.utc)
+        for entry in feed.entries[:15]:
+            article_score = 0
+            text = (entry.get('title', '') + " " + entry.get('summary', '')).lower()
+            article_score += sum(1 for k in POSITIVE_KEYWORDS if k in text)
+            article_score -= sum(1 for k in NEGATIVE_KEYWORDS if k in text)
+            
+            if 'published_parsed' in entry:
+                article_time = datetime.fromtimestamp(time.mktime(entry.published_parsed), tz=timezone.utc)
+                age_hours = (now_utc - article_time).total_seconds() / 3600
+                weight = max(0, 1 - (age_hours / 24.0))
+                weighted_score += article_score * weight
+        return int(round(weighted_score))
+    except:
         return 0
 
-def get_news_impact():
-    api_key = os.getenv('FINNHUB_API_KEY')
-    if not api_key: return 0
-    try:
-        today = datetime.now().strftime('%Y-%m-%d')
-        r = requests.get(f'https://finnhub.io/api/v1/calendar/economic?from={today}&to={today}&token={api_key}')
-        r.raise_for_status() # این خط خطا را در صورت وجود، نمایش می‌دهد
-        # ... بقیه کد این تابع بدون تغییر ...
-        news_events = r.json().get('economicCalendar', [])
-        if not news_events: return 0
-        highest_impact = 0; now = datetime.now()
-        for event in news_events:
-            event_time = datetime.fromisoformat(event.get('time', '').replace('Z', '+00:00')).replace(tzinfo=None)
-            if now < event_time < (now + timedelta(hours=2)) and int(event.get('impact', 0)) > highest_impact:
-                highest_impact = int(event.get('impact', 0))
-        return highest_impact
-    except Exception as e:
-        # FIX: چاپ خطای دقیق از Finnhub
-        print(f"ERROR fetching Finnhub data: {e}")
-        return 0
-
-def get_ai_recommendation():
-    try:
-        model = joblib.load('market_model.joblib')
-        political_score = get_political_sentiment()
-        news_impact = get_news_impact()
-        features = np.array([[political_score, news_impact]])
-        prediction = model.predict(features)[0]
-        probability = max(model.predict_proba(features)[0])
-        recommendation_map = {1: "BUY", -1: "SELL", 0: "HOLD"}
-        return {"prediction": int(prediction), "recommendation": recommendation_map.get(prediction, "HOLD"), "confidence": round(probability, 2), "political_score": political_score, "news_impact": news_impact}
-    except Exception as e:
-        return {"recommendation": "ERROR", "confidence": 0, "error": str(e)}
+def get_all_currency_sentiments():
+    """
+    امتیاز احساسات را برای همه ارزهای تعریف شده محاسبه می‌کند.
+    """
+    all_sentiments = {}
+    for currency, rss_url in CURRENCY_RSS_FEEDS.items():
+        all_sentiments[currency] = get_sentiment_for_feed(rss_url)
+    
+    all_sentiments["last_updated"] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    return all_sentiments
 
 if __name__ == "__main__":
-    final_analysis = get_ai_recommendation()
-    with open("sentiment.txt", "w") as f: json.dump(final_analysis, f)
-    print(f"Analysis updated: {final_analysis}")
+    final_analysis = get_all_currency_sentiments()
+    with open("sentiment.txt", "w") as f:
+        json.dump(final_analysis, f)
+    print(f"Currency sentiments updated: {final_analysis}")
