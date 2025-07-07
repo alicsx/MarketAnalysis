@@ -1,1 +1,1 @@
-{"recommendation": "ERROR", "confidence": 0, "error": "This 'VotingClassifier' has no attribute 'predict_proba'"}
+{"prediction": 0, "recommendation": "HOLD", "confidence": 0.51, "political_score": -1, "news_impact": 0}
