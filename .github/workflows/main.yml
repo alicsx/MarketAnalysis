@@ -1,21 +1,41 @@
+# .github/workflows/main.yml
 name: Run Market Analysis
+
 on:
   schedule:
     - cron: '*/5 * * * *'
   workflow_dispatch:
+
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
           python-version: '3.9'
-      - run: pip install requests feedparser
-      - env:
+
+      - name: Install dependencies
+        run: |
+          pip install requests
+          pip install feedparser
+
+      - name: Run Python Script
+        env:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
         run: python main.py
-      - uses: devops-infra/action-commit-push@v0.4
+
+      - name: Verify File Creation  # <<< قدم جدید برای عیب‌یابی
+        run: ls -l
+        
+      - name: Commit and Push changes
+        uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          github_token: "${{ secrets.GITHUB_TOKEN }}"
           commit_message: "Update market analysis"
+          file_pattern: sentiment.txt
