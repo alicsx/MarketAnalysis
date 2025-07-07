@@ -1,62 +1,21 @@
 # main.py
-import os
-import requests
-import random
-import json
+import os, requests, random, json, feedparser, joblib, numpy as np
 from datetime import datetime, timedelta
-import feedparser
 
-# آدرس فید RSS را می‌توانید از گزینه‌های قبلی انتخاب کنید
 NEWS_RSS_URL = "https://www.investing.com/rss/news_25.rss"
-
-# --- کلیدواژه‌های نهایی و بسیار گسترده ---
-POSITIVE_KEYWORDS = [
-    # سیاسی و دیپلماتیک
-    "agreement", "deal", "peace", "truce", "accord", "resolution", "talks", "summit", 
-    "cooperation", "ceasefire", "negotiation", "successful", "stability", "détente",
-    
-    # اقتصادی مثبت
-    "growth", "recover", "rebound", "expansion", "boom", "strong", "upbeat", "beats estimates", 
-    "better-than-expected", "stimulus", "easing", "dovish", "rate cut", "surplus", 
-    "employment", "hiring", "manufacturing", "pmi", "gdp", "upward revision",
-
-    # احساسات بازار مثبت
-    "optimism", "confidence", "rally", "surge", "gains", "bullish", "risk-on", "record high",
-    "breakthrough", "innovation", "outperform", "risk appetite"
-]
-
-NEGATIVE_KEYWORDS = [
-    # سیاسی و ژئوپلیتیک
-    "conflict", "sanction", "crisis", "war", "uncertainty", "dispute", "tension", 
-    "protest", "deadlock", "veto", "threat", "escalation", "unrest", "instability", "geopolitical",
-
-    # اقتصادی منفی
-    "recession", "downturn", "slowdown", "contraction", "inflation", "fears", "deficit", "debt",
-    "worse-than-expected", "disappointing", "misses estimates", "rate hike", "tightening", 
-    "hawkish", "jobless", "unemployment", "layoffs", "bankruptcy", "default", "bubble",
-
-    # احساسات بازار منفی
-    "panic", "sell-off", "crash", "slump", "tumble", "losses", "bearish", "risk-off", 
-    "volatile", "fear", "contagion", "vix", "correction", "headwinds"
-]
-
+POSITIVE_KEYWORDS = ["agreement","deal","peace","truce","accord","resolution","talks","summit","cooperation","ceasefire","negotiation","successful","stability","détente","growth","recover","rebound","expansion","boom","strong","upbeat","beats estimates","better-than-expected","stimulus","easing","dovish","rate cut","surplus","employment","hiring","manufacturing","pmi","gdp","upward revision","optimism","confidence","rally","surge","gains","bullish","risk-on","record high","breakthrough","innovation","outperform","risk appetite"]
+NEGATIVE_KEYWORDS = ["conflict","sanction","crisis","war","uncertainty","dispute","tension","protest","deadlock","veto","threat","escalation","unrest","instability","geopolitical","recession","downturn","slowdown","contraction","inflation","fears","deficit","debt","worse-than-expected","disappointing","misses estimates","rate hike","tightening","hawkish","jobless","unemployment","layoffs","bankruptcy","default","bubble","panic","sell-off","crash","slump","tumble","losses","bearish","risk-off","volatile","fear","contagion","vix","correction","headwinds"]
 
 def get_political_sentiment():
     try:
         feed = feedparser.parse(NEWS_RSS_URL)
-        sentiment_score = 0
-        for entry in feed.entries[:30]: # بررسی 30 تیتر آخر
-            full_text = entry.title.lower() + " " + entry.summary.lower()
-            for keyword in POSITIVE_KEYWORDS:
-                if keyword in full_text: sentiment_score += 1
-            for keyword in NEGATIVE_KEYWORDS:
-                if keyword in full_text: sentiment_score -= 1
-        return sentiment_score
-    except:
-        return 0
-
-# ... (بقیه توابع get_news_impact و get_ai_recommendation را از پاسخ قبلی کپی کنید) ...
-# در اینجا برای کامل بودن، مجدداً آورده شده‌اند
+        score = 0
+        for entry in feed.entries[:30]:
+            text = (entry.title + " " + entry.summary).lower()
+            score += sum(1 for k in POSITIVE_KEYWORDS if k in text)
+            score -= sum(1 for k in NEGATIVE_KEYWORDS if k in text)
+        return score
+    except: return 0
 
 def get_news_impact():
     api_key = os.getenv('FINNHUB_API_KEY')
@@ -64,37 +23,36 @@ def get_news_impact():
     try:
         today = datetime.now().strftime('%Y-%m-%d')
         r = requests.get(f'https://finnhub.io/api/v1/calendar/economic?from={today}&to={today}&token={api_key}')
-        news_events = r.json().get('economicCalendar', [])
-        if not news_events: return 0
-        highest_impact = 0; now = datetime.now()
-        for event in news_events:
+        events = r.json().get('economicCalendar', [])
+        impact = 0
+        now = datetime.now()
+        for event in events:
             event_time = datetime.fromisoformat(event.get('time', '').replace('Z', '+00:00')).replace(tzinfo=None)
-            if now < event_time < (now + timedelta(hours=2)):
-                if int(event.get('impact', 0)) > highest_impact:
-                    highest_impact = int(event.get('impact', 0))
-        return highest_impact
-    except:
-        return 0
+            if now < event_time < (now + timedelta(hours=2)) and int(event.get('impact', 0)) > impact:
+                impact = int(event.get('impact', 0))
+        return impact
+    except: return 0
 
 def get_ai_recommendation():
-    technical_score = random.randint(-100, 100)
-    news_impact = get_news_impact()
-    political_score = get_political_sentiment()
-    final_score = technical_score + (political_score * 10)
-    recommendation = "HOLD"
-
-    if news_impact >= 3: recommendation = "AVOID_NEWS"
-    elif political_score <= -5: recommendation = "AVOID_POLITICAL_RISK"
-    elif final_score > 80: recommendation = "STRONG_BUY"
-    elif final_score > 40: recommendation = "BUY"
-    elif final_score < -80: recommendation = "STRONG_SELL"
-    elif final_score < -40: recommendation = "SELL"
-        
-    output = {"final_score": final_score, "news_impact": news_impact, "political_score": political_score, "recommendation": recommendation}
-    return output
+    try:
+        model = joblib.load('market_model.joblib')
+        political_score = get_political_sentiment()
+        news_impact = get_news_impact()
+        features = np.array([[political_score, news_impact]])
+        prediction = model.predict(features)[0]
+        probability = max(model.predict_proba(features)[0])
+        recommendation_map = {1: "BUY", -1: "SELL", 0: "HOLD"}
+        return {
+            "prediction": int(prediction),
+            "recommendation": recommendation_map.get(prediction, "HOLD"),
+            "confidence": round(probability, 2),
+            "political_score": political_score,
+            "news_impact": news_impact
+        }
+    except Exception as e:
+        return {"recommendation": "ERROR", "confidence": 0, "error": str(e)}
 
 if __name__ == "__main__":
-    final_analysis = get_ai_recommendation()
-    with open("sentiment.txt", "w") as f:
-        json.dump(final_analysis, f)
-    print(f"Analysis updated: {final_analysis}")
+    analysis = get_ai_recommendation()
+    with open("sentiment.txt", "w") as f: json.dump(analysis, f)
+    print(f"Analysis updated: {analysis}")
