@@ -1,1 +1,1 @@
-{"final_score": 25, "news_impact": 0, "political_score": 0, "recommendation": "HOLD"}
+{"final_score": -26, "news_impact": 0, "political_score": 0, "recommendation": "HOLD"}
