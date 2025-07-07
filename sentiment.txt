@@ -1,1 +1,1 @@
-{"final_score": 49, "news_impact": 0, "political_score": 0, "recommendation": "BUY"}
+{"recommendation": "ERROR", "confidence": 0, "error": "This 'VotingClassifier' has no attribute 'predict_proba'"}
