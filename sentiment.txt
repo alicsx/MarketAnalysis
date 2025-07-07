@@ -1,1 +1,1 @@
-{"prediction": 0, "recommendation": "HOLD", "confidence": 0.51, "political_score": -1, "news_impact": 0}
+{"USD": 0, "EUR": 0, "GBP": 0, "JPY": 0, "CAD": 0, "AUD": 0, "CHF": 0, "World": -1, "last_updated": "2025-07-07 20:47:10"}
