@@ -1,0 +1,13 @@
+{
+  "weights": {
+    "USD": 1.0,
+    "EUR": 1.0,
+    "GBP": 1.0,
+    "JPY": 1.0,
+    "CAD": 1.0,
+    "AUD": 1.0,
+    "CHF": 1.0,
+    "World": 0.5
+  },
+  "last_prediction": {}
+}
