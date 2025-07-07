@@ -1,41 +1,23 @@
 # .github/workflows/main.yml
-name: Run Market Analysis
-
+name: Run Self-Correcting AI
 on:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '0 */4 * * *' # هر 4 ساعت یکبار اجرا می‌شود
   workflow_dispatch:
-
 permissions:
   contents: write
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v3
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.9'
-
-      - name: Install dependencies
-        run: |
-          pip install requests
-          pip install feedparser
-
-      - name: Run Python Script
-        env:
-          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
-        run: python main.py
-
-      - name: Verify File Creation  # <<< قدم جدید برای عیب‌یابی
-        run: ls -l
-        
-      - name: Commit and Push changes
-        uses: stefanzweifel/git-auto-commit-action@v5
+      - run: pip install feedparser pandas yfinance
+      - run: python main.py
+      - uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Update market analysis"
-          file_pattern: sentiment.txt
+          commit_message: "Update AI analysis and memory"
+          # هر دو فایل حافظه و خروجی را ذخیره کن
+          file_pattern: "sentiment.txt strategy_data.json"
