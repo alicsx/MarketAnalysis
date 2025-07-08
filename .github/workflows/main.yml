@@ -1,8 +1,7 @@
-# .github/workflows/main.yml
-name: Run Self-Correcting AI
+name: Run Comprehensive AI Analysis
 on:
   schedule:
-    - cron: '0 */4 * * *' # هر 4 ساعت یکبار اجرا می‌شود
+    - cron: '0 */4 * * *' # هر 4 ساعت
   workflow_dispatch:
 permissions:
   contents: write
@@ -18,6 +17,5 @@ jobs:
       - run: python main.py
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Update AI analysis and memory"
-          # هر دو فایل حافظه و خروجی را ذخیره کن
-          file_pattern: "sentiment.txt strategy_data.json"
+          commit_message: "Update AI analysis and dashboard"
+          file_pattern: "sentiment.txt strategy_data.json dashboard.html"
