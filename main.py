@@ -16,14 +16,36 @@ CURRENCY_PAIRS_YF = {"EURUSD":"EURUSD=X", "GBPUSD":"GBPUSD=X", "USDJPY":"USDJPY=
 
 # --- دیکشنری کلیدواژه‌های جامع با وزن‌دهی معنایی ---
 KEYWORDS = {
-    "breakthrough":5,"landmark deal":5,"historic agreement":5,"bull market":5,"record high":4,"surge":4,"boom":4,
-    "strong growth":3,"beats estimates":3,"rally":3,"optimism":3,"peace":3,"stimulus":3,"dovish":3,"outperform":3,
-    "agreement":2,"recover":2,"rebound":2,"upbeat":2,"easing":2,"expansion":2,"confidence":2,"hiring":2,"better-than-expected":2,
-    "talks":1,"stable":1,"negotiation":1,"potential":1,"improving":1,"rate cut":1,"upward revision":1,"risk-on":1,
-    "war":-5,"crash":-5,"panic":-5,"default":-5,"collapse":-5,"bear market":-5,"turmoil":-5,
-    "crisis":-4,"recession":-4,"lockdown":-4,"sell-off":-3,"fears":-3,"sanction":-3,"sharp drop":-3,
-    "inflation":-2,"rate hike":-2,"uncertainty":-2,"dispute":-2,"tightening":-2,"hawkish":-2,"bearish":-2,"deficit":-2,
-    "tension":-1,"volatile":-1,"worse-than-expected":-1,"slowdown":-1,"risk-off":-1,"headwinds":-1,"concerns":-1,"jobless":-1
+    "breakthrough": 5, "historic agreement": 5, "bull market": 5, "record high": 4, "surge": 4, "economic boom": 4, "massive stimulus": 4,
+    "peace treaty": 4, "landmark deal": 4,
+
+    # ++ مثبت قوی (امتیاز ۳) ++
+    "strong growth": 3, "beats estimates": 3, "rally": 3, "optimism": 3, "peace": 3, "dovish pivot": 3, "outperform": 3,
+    "strong recovery": 3, "major accord": 3, "better-than-expected": 3,
+
+    # + مثبت متوسط (امتیاز ۲) +
+    "agreement": 2, "recover": 2, "rebound": 2, "upbeat": 2, "easing": 2, "expansion": 2, "confidence": 2, "hiring": 2,
+    "stimulus package": 2, "successful negotiation": 2, "rate cut": 2,
+
+    # - مثبت ضعیف (امتیاز ۱) -
+    "talks": 1, "stable": 1, "negotiating": 1, "potential": 1, "improving": 1, "upward revision": 1, "risk-on": 1,
+    "positive outlook": 1, "cooperation": 1, "détente": 1,
+
+    # --- منفی بسیار قوی (امتیاز -۴ تا -۵) ---
+    "war": -5, "crash": -5, "panic": -5, "default": -5, "collapse": -5, "bear market": -5, "turmoil": -5, "invasion": -5,
+    "financial crisis": -5, "state of emergency": -5,
+
+    # -- منفی قوی (امتیاز -۳) --
+    "crisis": -3, "recession": -3, "sanctions": -3, "sell-off": -3, "fears": -3, "lockdown": -3, "sharp drop": -3,
+    "geopolitical crisis": -3, "trade war": -3,
+
+    # - منفی متوسط (امتیاز -۲) -
+    "inflation": -2, "rate hike": -2, "uncertainty": -2, "dispute": -2, "tightening": -2, "hawkish": -2, "bearish": -2,
+    "deficit": -2, "worse-than-expected": -2, "layoffs": -2, "bankruptcy": -2, "escalation": -2,
+
+    # - منفی ضعیف (امتیاز -۱) -
+    "tension": -1, "volatile": -1, "slowdown": -1, "risk-off": -1, "headwinds": -1, "concerns": -1, "jobless": -1,
+    "protest": -1, "deadlock": -1, "threat": -1
 }
 
 # --- توابع اصلی تحلیل ---
