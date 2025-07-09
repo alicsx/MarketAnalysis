@@ -1,3 +1,42 @@
 {
-    "analysis": {}
+    "analysis": {
+        "EURUSD": {
+            "trade_plans": [
+                {
+                    "type": "BUY",
+                    "price": 1.0183818340301514,
+                    "score": 100,
+                    "thesis": "Swing Low + Pro-Trend + DXY Confirms"
+                },
+                {
+                    "type": "BUY",
+                    "price": 1.0213043689727783,
+                    "score": 100,
+                    "thesis": "Swing Low + Pro-Trend + DXY Confirms"
+                },
+                {
+                    "type": "BUY",
+                    "price": 1.1075055599212646,
+                    "score": 100,
+                    "thesis": "Swing Low + Pro-Trend + DXY Confirms"
+                }
+            ]
+        },
+        "GBPUSD": {
+            "trade_plans": [
+                {
+                    "type": "BUY",
+                    "price": 1.248860478401184,
+                    "score": 100,
+                    "thesis": "Swing Low + Pro-Trend + DXY Confirms"
+                },
+                {
+                    "type": "BUY",
+                    "price": 1.2101263999938965,
+                    "score": 100,
+                    "thesis": "Swing Low + Pro-Trend + DXY Confirms"
+                }
+            ]
+        }
+    }
 }
