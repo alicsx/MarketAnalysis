@@ -125,29 +125,43 @@ def save_memory(data):
 # تابع review_past_predictions و generate_dashboard_html بدون تغییر باقی می‌مانند
 # ... (کدهای آن توابع را اینجا کپی کنید) ...
 def review_past_predictions(memory):
-    last_pred = memory.get("last_prediction", {})
-    if not last_pred: return memory
-    pred_time = datetime.fromisoformat(last_pred["timestamp"])
-    if not (timedelta(hours=4) < datetime.now() - pred_time < timedelta(hours=8)): return memory
-    print("Reviewing past prediction to update weights...")
-    pair, predicted_move = last_pred["pair"], last_pred["predicted_move"]
-    try:
-        ticker = yf.Ticker(CURRENCY_PAIRS_YF.get(pair)).history(period="1d", interval="1h")
-        start_price = ticker.loc[ticker.index.hour == pred_time.hour]['Close'].iloc[0]
-        end_price = ticker['Close'].iloc[-1]
-        actual_move = 1 if end_price > start_price else -1
-        base_curr, quote_curr = pair[:3], pair[3:]
-        if predicted_move == actual_move:
-            memory["weights"][base_curr] = min(1.5, memory["weights"][base_curr] * 1.02)
-            memory["weights"][quote_curr] = max(0.5, memory["weights"][quote_curr] * 0.98)
-        else:
-            memory["weights"][base_curr] = max(0.5, memory["weights"][base_curr] * 0.98)
-            memory["weights"][quote_curr] = min(1.5, memory["weights"][quote_curr] * 1.02)
-        memory["last_prediction"] = {}
-        return memory
-    except Exception as e:
-        print(f"Could not verify prediction for {pair}: {e}")
-        return memory
+    last_pred = memory.get("last_prediction", {})
+    if not last_pred:
+        return memory
+    
+    pred_time = datetime.fromisoformat(last_pred["timestamp"])
+    # Check if the prediction is between 4 and 8 hours old
+    if not (timedelta(hours=4) < datetime.now() - pred_time < timedelta(hours=8)):
+        return memory
+        
+    print("Reviewing past prediction to update weights...")
+    pair, predicted_move = last_pred["pair"], last_pred["predicted_move"]
+    
+    try:
+        ticker = yf.Ticker(CURRENCY_PAIRS_YF.get(pair)).history(period="1d", interval="1h")
+        start_price = ticker.loc[ticker.index.hour == pred_time.hour]['Close'].iloc[0]
+        end_price = ticker['Close'].iloc[-1]
+        actual_move = 1 if end_price > start_price else -1
+        
+        base_curr, quote_curr = pair[:3], pair[3:]
+        
+        if predicted_move == actual_move:
+            # Prediction was correct
+            memory["weights"][base_curr] = min(1.5, memory["weights"][base_curr] * 1.02)
+            memory["weights"][quote_curr] = max(0.5, memory["weights"][quote_curr] * 0.98)
+            print(f"Prediction for {pair} was CORRECT. Adjusting weights.")
+        else:
+            # Prediction was wrong
+            memory["weights"][base_curr] = max(0.5, memory["weights"][base_curr] * 0.98)
+            memory["weights"][quote_curr] = min(1.5, memory["weights"][quote_curr] * 1.02)
+            print(f"Prediction for {pair} was WRONG. Adjusting weights.")
+            
+        # Clear the prediction after review
+        memory["last_prediction"] = {}
+        return memory
+    except Exception as e:
+        print(f"Could not verify prediction for {pair}: {e}")
+        return memory
 def generate_dashboard_html(data):
     regime_color = {"Risk-On": "#4CAF50", "Risk-Off": "#F44336", "Neutral": "#777"}.get(data['market_regime'], "#777")
     html = f"""
