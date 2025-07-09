@@ -1,13 +1,13 @@
 # analyze_liquidity.yml - Final Version with Correct Permissions
-name: Run Guaranteed Liquidity Analysis
+name: Run Multi-Currency Liquidity Analysis
 
 on:
   schedule:
-    - cron: '0 2 * * *'
-  workflow_dispatch:
+    - cron: '0 2 * * *' # اجرای روزانه
+  workflow_dispatch:   # اجرای دستی
 
-# --- راه حل قطعی خطا ---
-# این بخش به workflow اجازه می‌دهد تا تغییرات را در ریپازیتوری شما کامیت و پوش کند
+# --- کلید حل مشکل اینجاست ---
+# این بخش به workflow اجازه می‌دهد تا فایل‌ها را در ریپازیتوری شما بنویسد (کامیت و پوش کند).
 permissions:
   contents: write
 
@@ -17,22 +17,22 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-        
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-          
+      
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install pandas numpy yfinance scipy
-          
-      - name: Run Guaranteed Analyzer Script
-        run: python liquidity_analyzer.py # یا هر نام دیگری که برای فایل پایتون نهایی خود گذاشته‌اید
+      
+      - name: Run Multi-Currency Analyzer Script
+        run: python liquidity_analyzer.py # یا هر نامی که برای فایل پایتون چندارزی گذاشته‌اید
         
       - name: Commit and Push Analysis File
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: '✅ (AI) Update liquidity analysis'
-          file_pattern: liquidity_analysis.json # یا هر نام دیگری که برای فایل خروجی خود گذاشته‌اید
+          commit_message: '✅ (AI Multi-Currency) Update liquidity analysis'
+          file_pattern: multi_currency_analysis.json # نام فایل خروجی شما
