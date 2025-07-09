@@ -15,7 +15,7 @@ CORRELATION_SYMBOLS = {"DXY": "DX-Y.NYB"}
 LOOKBACK_DAYS = 252 # یک سال معاملاتی
 EMA_PERIODS = [50, 200]
 FIB_LEVELS = [0.382, 0.5, 0.618]
-OUTPUT_FILENAME = "confluence_plans.json"
+OUTPUT_FILENAME = "multi_currency_analysis.json"
 
 def validate_data(data, symbol_name):
     if data is None or data.empty: return None
