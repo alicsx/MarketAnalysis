@@ -163,22 +163,23 @@ def review_past_predictions(memory):
         print(f"Could not verify prediction for {pair}: {e}")
         return memory
 def generate_dashboard_html(data):
-    regime_color = {"Risk-On": "#4CAF50", "Risk-Off": "#F44336", "Neutral": "#777"}.get(data['market_regime'], "#777")
-    html = f"""
-    <html><head><title>AI Dashboard V2</title><meta http-equiv="refresh" content="300">
-    <style>body{{font-family: Consolas, monospace; background: #1e1e1e; color: #d4d4d4;}} table{{width: 600px; margin: auto; border-collapse: collapse;}} td, th{{border: 1px solid #444; padding: 10px; text-align: center;}} th{{background: #2a2d2e;}} .status{{font-size: 1.2em;}} .buy{{color: #50fa7b; font-weight: bold;}} .sell{{color: #ff5555; font-weight: bold;}}</style></head>
-    <body><h1 style="text-align:center;">Comprehensive AI Trading Dashboard V2</h1>
-    <p style="text-align:center;">Last Updated (UTC): {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}</p>
-    <table class="status"><tr><th>Master Control</th><th>Market Regime</th></tr>
-    <tr><td><b>{data['master_control']}</b></td><td style="color:{regime_color};"><b>{data['market_regime']}</b></td></tr></table>
-    <h2 style="text-align:center; margin-top: 40px;">Final Combined Currency Score</h2><table>
-    <tr><th>Currency</th><th>Final Score</th></tr>"""
-    for currency, score in sorted(data['final_sentiments'].items()):
-        if currency == 'World': continue
-        css_class = 'buy' if score > 5 else 'sell' if score < -5 else ''
-        html += f"<tr><td>{currency}</td><td class='{css_class}'>{score}</td></tr>"
-    html += "</table></body></html>"
-    return html
+    regime_color = {"Risk-On": "#4CAF50", "Risk-Off": "#F44336", "Neutral": "#777"}.get(data['market_regime'], "#777")
+    html = f"""
+    <html><head><title>AI Dashboard V2</title><meta http-equiv="refresh" content="300">
+    <style>body{{font-family: Consolas, monospace; background: #1e1e1e; color: #d4d4d4;}} table{{width: 600px; margin: auto; border-collapse: collapse;}} td, th{{border: 1px solid #444; padding: 10px; text-align: center;}} th{{background: #2a2d2e;}} .status{{font-size: 1.2em;}} .buy{{color: #50fa7b; font-weight: bold;}} .sell{{color: #ff5555; font-weight: bold;}}</style></head>
+    <body><h1 style="text-align:center;">Comprehensive AI Trading Dashboard V2</h1>
+    <p style="text-align:center;">Last Updated (UTC): {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}</p>
+    <table class="status"><tr><th>Master Control</th><th>Market Regime</th></tr>
+    <tr><td><b>{data['master_control']}</b></td><td style="color:{regime_color};"><b>{data['market_regime']}</b></td></tr></table>
+    <h2 style="text-align:center; margin-top: 40px;">Final Combined Currency Score</h2><table>
+    <tr><th>Currency</th><th>Final Score</th></tr>"""
+    for currency, score in sorted(data['final_sentiments'].items()):
+        if currency == 'World':
+            continue
+        css_class = 'buy' if score > 5 else 'sell' if score < -5 else ''
+        html += f"<tr><td>{currency}</td><td class='{css_class}'>{score}</td></tr>"
+    html += "</table></body></html>"
+    return html
 def run_main_analysis():
     # ۱. خواندن کنترل دستی
     try:
