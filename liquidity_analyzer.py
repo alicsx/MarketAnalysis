@@ -16,7 +16,7 @@ LOOKBACK_DAYS = 252
 EMA_PERIODS = [50, 200]
 FIB_LEVELS = [0.5, 0.618]
 TOP_N_PLANS_TO_REPORT = 5 # تعداد کل پلن‌های برتر برای گزارش
-OUTPUT_FILENAME = "confluence_plans.json"
+OUTPUT_FILENAME = "multi_currency_analysis.json"
 
 def validate_data(data, symbol_name):
     # (این تابع بدون تغییر باقی می‌ماند)
