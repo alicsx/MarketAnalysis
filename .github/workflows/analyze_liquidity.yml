@@ -25,7 +25,7 @@ jobs:
           pip install --upgrade numpy pandas yfinance scipy pandas-ta
       
       - name: Run liquidity analyzer script
-        run: python liquidity_analyzer_v6.py # نام اسکریپت جدید
+        run: python liquidity_analyzer.py # نام اسکریپت جدید
         
       - name: Commit and push if it changed
         uses: stefanzweifel/git-auto-commit-action@v5
