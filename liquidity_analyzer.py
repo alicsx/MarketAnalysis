@@ -1,103 +1,116 @@
-# liquidity_analyzer_v6.py
-# Copyright 2025, Gemini AI - Predictive & Self-Optimizing Analysis
+# liquidity_analyzer_v7.py
+# Copyright 2025, Gemini AI - Inter-Market Correlation Analysis
 
 import yfinance as yf
 import pandas as pd
-import numpy as np
 import pandas_ta as ta
 from scipy.signal import find_peaks
 from datetime import datetime, timedelta
 import json
 
 # --- تنظیمات اصلی ---
-SYMBOL = "EURUSD=X"
-LOOKBACK_DAYS_DAILY = 120
-LOOKBACK_DAYS_WEEKLY = 500
+PRIMARY_SYMBOL = "EURUSD=X"
+CORRELATION_SYMBOLS = {
+    "DXY": "DX-Y.NYB",      # شاخص دلار
+    "SPX": "^GSPC"          # شاخص S&P 500
+}
+LOOKBACK_DAYS = 120
 NUM_LEVELS_TO_KEEP = 2
-EMA_PERIOD_TREND = 50
-OUTPUT_FILENAME = "liquidity_analysis_v6.json"
+EMA_PERIOD = 50
+OUTPUT_FILENAME = "liquidity_analysis_v7.json"
 
-def analyze_predictive_levels(data, timeframe_tag, main_trend):
-    if data.empty or len(data) < EMA_PERIOD_TREND:
-        return []
+def get_technical_summary(data, symbol_name):
+    """خلاصه وضعیت تکنیکال یک نماد را برمی‌گرداند"""
+    if data.empty or len(data) < EMA_PERIOD:
+        return {"trend": "Unknown"}
+    data.ta.ema(length=EMA_PERIOD, append=True)
+    last_close = data['Close'].iloc[-1]
+    last_ema = data[f'EMA_{EMA_PERIOD}'].iloc[-1]
+    
+    summary = {}
+    if last_close > last_ema * 1.005:
+        summary["trend"] = "Strong Bullish"
+    elif last_close > last_ema:
+        summary["trend"] = "Bullish"
+    elif last_close < last_ema * 0.995:
+        summary["trend"] = "Strong Bearish"
+    else:
+        summary["trend"] = "Bearish"
+        
+    return summary
 
-    # محاسبه اندیکاتورهای جامع با pandas_ta
+def analyze_levels_with_correlation(data, correlation_context):
+    """سطوح نقدینگی را با در نظر گرفتن زمینه بازار تحلیل می‌کند"""
+    if data.empty: return []
     data.ta.atr(length=14, append=True)
-    data.ta.rsi(length=14, append=True)
-    data.ta.bbands(length=20, append=True) # Bollinger Bands
-    data.ta.ichimoku(append=True) # Ichimoku Cloud
     data = data.dropna()
     
     prominence_threshold = data['ATRr_14'].mean() * 0.7
-    all_peaks = []
+    levels = []
     
     high_indices, _ = find_peaks(data['High'].to_numpy(), prominence=prominence_threshold, distance=5)
     for idx in high_indices:
-        peak = data.iloc[idx]
-        is_pro_trend = main_trend == 'Down'
-        is_overbought = peak['RSI_14'] > 68
-        # بررسی هم‌راستایی با ابر ایچیموکو آینده
-        is_ichimoku_aligned = peak['High'] > peak['ITS_9'] and peak['Close'] < peak['IKS_26'] and peak['Close'] < peak['ISA_9']
-        is_after_squeeze = data['BBB_20_2.0'].iloc[max(0, idx-5):idx].mean() < data['BBB_20_2.0'].mean() * 0.8
+        level_price = data.iloc[idx]['High']
         
-        thesis = f"Sell setup at {timeframe_tag} high. "
-        if is_pro_trend: thesis += "Pro-trend. "
-        if is_overbought: thesis += "Overbought RSI. "
-        if is_ichimoku_aligned: thesis += "Rejected by Ichimoku. "
-        if is_after_squeeze: thesis += "Post-squeeze volatility expected. "
+        score = 50
+        thesis = f"Sell setup at {level_price:.5f}. "
         
-        all_peaks.append({
-            "type": "high", "price": peak['High'], "timeframe": timeframe_tag,
-            "ichimoku_aligned": is_ichimoku_aligned,
-            "after_squeeze": is_after_squeeze,
-            "validity_score": 50 + (25 if is_pro_trend else 0) + (15 if is_overbought else 0) + (20 if is_ichimoku_aligned else 0),
-            "trade_thesis": thesis
-        })
+        # امتیازدهی بر اساس همبستگی
+        if correlation_context.get("DXY", {}).get("trend", "").endswith("Bullish"):
+            score += 30
+            thesis += "Confirmed by DXY strength. "
+        if correlation_context.get("SPX", {}).get("trend", "").endswith("Bearish"):
+            score += 10 # ریسک گریزی به نفع دلار و علیه یورو است
+            thesis += "Risk-off sentiment. "
+            
+        levels.append({"type": "high", "price": level_price, "validity_score": score, "trade_thesis": thesis})
 
     low_indices, _ = find_peaks(-data['Low'].to_numpy(), prominence=prominence_threshold, distance=5)
     for idx in low_indices:
-        peak = data.iloc[idx]
-        is_pro_trend = main_trend == 'Up'
-        is_oversold = peak['RSI_14'] < 32
-        is_ichimoku_aligned = peak['Low'] < peak['ITS_9'] and peak['Close'] > peak['IKS_26'] and peak['Close'] > peak['ISA_9']
-        is_after_squeeze = data['BBB_20_2.0'].iloc[max(0, idx-5):idx].mean() < data['BBB_20_2.0'].mean() * 0.8
+        level_price = data.iloc[idx]['Low']
         
-        thesis = f"Buy setup at {timeframe_tag} low. "
-        if is_pro_trend: thesis += "Pro-trend. "
-        if is_oversold: thesis += "Oversold RSI. "
-        if is_ichimoku_aligned: thesis += "Supported by Ichimoku. "
-        if is_after_squeeze: thesis += "Post-squeeze volatility expected. "
-
-        all_peaks.append({
-            "type": "low", "price": peak['Low'], "timeframe": timeframe_tag,
-            "ichimoku_aligned": is_ichimoku_aligned,
-            "after_squeeze": is_after_squeeze,
-            "validity_score": 50 + (25 if is_pro_trend else 0) + (15 if is_oversold else 0) + (20 if is_ichimoku_aligned else 0),
-            "trade_thesis": thesis
-        })
+        score = 50
+        thesis = f"Buy setup at {level_price:.5f}. "
         
-    return all_peaks
+        if correlation_context.get("DXY", {}).get("trend", "").endswith("Bearish"):
+            score += 30
+            thesis += "Confirmed by DXY weakness. "
+        if correlation_context.get("SPX", {}).get("trend", "").endswith("Bullish"):
+            score += 10 # ریسک پذیری به نفع یورو و علیه دلار است
+            thesis += "Risk-on sentiment. "
+            
+        levels.append({"type": "low", "price": level_price, "validity_score": score, "trade_thesis": thesis})
+        
+    return levels
 
 def main():
-    print(f"شروع تحلیل پیش‌بینانه V6 برای: {SYMBOL}")
+    print(f"شروع تحلیل همبستگی V7 برای: {PRIMARY_SYMBOL}")
     try:
         end_date = datetime.now()
-        daily_data = yf.download(SYMBOL, start=end_date - timedelta(days=LOOKBACK_DAYS_DAILY), end=end_date, interval="1d")
-        daily_data.ta.ema(length=EMA_PERIOD_TREND, append=True)
-        main_trend = "Up" if daily_data['Close'].iloc[-1] > daily_data[f'EMA_{EMA_PERIOD_TREND}'].iloc[-1] else "Down"
+        start_date = end_date - timedelta(days=LOOKBACK_DAYS)
         
-        weekly_data = yf.download(SYMBOL, start=end_date - timedelta(days=LOOKBACK_DAYS_WEEKLY), end=end_date, interval="1wk")
+        # ۱. تحلیل بازارهای مرتبط
+        correlation_context = {}
+        for name, ticker in CORRELATION_SYMBOLS.items():
+            print(f"Analyzing correlation symbol: {name}")
+            corr_data = yf.download(ticker, start=start_date, end=end_date)
+            correlation_context[name] = get_technical_summary(corr_data, name)
         
-        levels = analyze_predictive_levels(daily_data, "D1", main_trend) + analyze_predictive_levels(weekly_data, "W1", main_trend)
+        print(f"Correlation Context: {correlation_context}")
+        
+        # ۲. تحلیل نماد اصلی با استفاده از زمینه همبستگی
+        primary_data = yf.download(PRIMARY_SYMBOL, start=start_date, end=end_date)
+        levels = analyze_levels_with_correlation(primary_data, correlation_context)
+        
         levels.sort(key=lambda x: x['validity_score'], reverse=True)
-
         final_levels = levels[:NUM_LEVELS_TO_KEEP*2]
+
         output_data = {"last_update": datetime.now().strftime('%Y-%m-%d %H:%M:%S'), "liquidity_levels": final_levels}
 
         with open(OUTPUT_FILENAME, 'w') as f:
             json.dump(output_data, f, indent=4)
             
-        print(f"تحلیل جامع V6 با موفقیت انجام و {len(final_levels)} سطح کلیدی در '{OUTPUT_FILENAME}' ذخیره شد.")
+        print(f"تحلیل جامع V7 با موفقیت انجام و {len(final_levels)} سطح کلیدی در '{OUTPUT_FILENAME}' ذخیره شد.")
 
     except Exception as e:
         print(f"یک خطای غیرمنتظره رخ داد: {e}")
