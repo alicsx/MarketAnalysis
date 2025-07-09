@@ -1,5 +1,5 @@
-# liquidity_analyzer_standalone.py
-# Copyright 2025, Gemini AI - The Final, Standalone & Error-Free Version
+# liquidity_analyzer_robust.py
+# Copyright 2025, Gemini AI - The Final, Robust & Error-Proof Version
 
 import yfinance as yf
 import pandas as pd
@@ -7,6 +7,7 @@ import numpy as np
 from scipy.signal import find_peaks
 from datetime import datetime, timedelta
 import json
+import sys # برای خروج اضطراری
 
 # --- تنظیمات نهایی ---
 PRIMARY_SYMBOL = "EURUSD=X"
@@ -15,49 +16,61 @@ LOOKBACK_DAYS = 120
 EMA_PERIOD_TREND = 50
 OUTPUT_FILENAME = "liquidity_analysis_final.json"
 
-# --- پیاده‌سازی مستقیم اندیکاتورها (حذف وابستگی به pandas_ta) ---
+# --- توابع داخلی و مستقل برای محاسبه اندیکاتورها ---
 def calculate_ema(series, period):
     return series.ewm(span=period, adjust=False).mean()
-
-def calculate_atr(data, period=14):
-    high_low = data['High'] - data['Low']
-    high_close = np.abs(data['High'] - data['Close'].shift())
-    low_close = np.abs(data['Low'] - data['Close'].shift())
-    tr = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
-    return calculate_ema(tr, period)
 
 def calculate_rsi(series, period=14):
     delta = series.diff(1)
     gain = (delta.where(delta > 0, 0)).ewm(alpha=1/period, adjust=False).mean()
     loss = (-delta.where(delta < 0, 0)).ewm(alpha=1/period, adjust=False).mean()
+    if loss.iloc[-1] == 0: return pd.Series(100.0, index=series.index)
     rs = gain / loss
     return 100 - (100 / (1 + rs))
 
+def validate_data(data, symbol_name):
+    """تابع حیاتی برای اعتبارسنجی داده‌های دانلود شده"""
+    if data is None or data.empty:
+        print(f"FATAL ERROR: No data downloaded for {symbol_name}. Exiting.")
+        sys.exit(1) # خروج از اسکریپت
+    
+    required_columns = ['High', 'Low', 'Close']
+    if not all(col in data.columns for col in required_columns):
+        print(f"FATAL ERROR: Data for {symbol_name} is missing required columns. Exiting.")
+        sys.exit(1)
+    
+    # حذف سطرهایی که داده ناقص دارند
+    data.dropna(subset=required_columns, inplace=True)
+    if len(data) < EMA_PERIOD_TREND:
+        print(f"FATAL ERROR: Not enough historical data for {symbol_name} after cleaning. Exiting.")
+        sys.exit(1)
+    
+    return data
+
+
 def get_market_context(start, end):
-    """زمینه کلی بازار را بر اساس نمادهای همبستگی تحلیل می‌کند"""
+    """زمینه بازار را با مدیریت خطای کامل تحلیل می‌کند"""
     context = {}
     print("Analyzing market context...")
     for name, ticker in CORRELATION_SYMBOLS.items():
         try:
-            data = yf.download(ticker, start=start, end=end, progress=False, timeout=10)
-            if not data.empty:
-                data['EMA'] = calculate_ema(data['Close'], EMA_PERIOD_TREND)
-                context[name] = "Bullish" if data['Close'].iloc[-1] > data['EMA'].iloc[-1] else "Bearish"
-        except Exception:
+            data = yf.download(ticker, start=start, end=end, progress=False, timeout=15)
+            data = validate_data(data, name) # اعتبارسنجی داده‌ها
+            data['EMA'] = calculate_ema(data['Close'], EMA_PERIOD_TREND)
+            context[name] = "Bullish" if data['Close'].iloc[-1] > data['EMA'].iloc[-1] else "Bearish"
+        except Exception as e:
+            print(f"Could not process data for {name}: {e}")
             context[name] = "Unknown"
     print(f"Market Context: {context}")
     return context
 
 def generate_final_analysis(data, context):
-    """تحلیل نهایی با استفاده از اندیکاتورهای داخلی"""
-    if data.empty or len(data) < EMA_PERIOD_TREND: return []
-    
-    data['ATRr_14'] = calculate_atr(data, 14)
+    """تحلیل نهایی با استفاده از اندیکاتورهای داخلی و داده‌های معتبر"""
     data['RSI_14'] = calculate_rsi(data['Close'], 14)
     data['Trend_EMA'] = calculate_ema(data['Close'], EMA_PERIOD_TREND)
     data = data.dropna()
 
-    prominence_threshold = data['ATRr_14'].mean() * 0.7
+    prominence_threshold = data['Close'].std() * 0.5 # آستانه برجستگی بر اساس انحراف معیار قیمت
     trade_plans = []
 
     # تحلیل سقف‌ها
@@ -85,26 +98,25 @@ def generate_final_analysis(data, context):
     return trade_plans
 
 def main():
-    print(f"Starting Standalone Analysis (V-Final) for: {PRIMARY_SYMBOL}")
-    try:
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=LOOKBACK_DAYS)
+    print(f"Starting Robust Analysis (V-Final) for: {PRIMARY_SYMBOL}")
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=LOOKBACK_DAYS)
+    
+    market_context = get_market_context(start_date, end_date)
+    
+    primary_data = yf.download(PRIMARY_SYMBOL, start=start_date, end=end_date, progress=False, timeout=15)
+    primary_data = validate_data(primary_data, PRIMARY_SYMBOL) # اعتبارسنجی داده اصلی
+    
+    all_plans = generate_final_analysis(primary_data, market_context)
+    all_plans.sort(key=lambda x: x['confidence_score'], reverse=True)
+    final_plans = all_plans[:4]
+
+    output_data = {"last_update": datetime.now().strftime('%Y-%m-%d %H:%M:%S'), "trade_plans": final_plans}
+
+    with open(OUTPUT_FILENAME, 'w') as f:
+        json.dump(output_data, f, indent=4)
         
-        market_context = get_market_context(start_date, end_date)
-        primary_data = yf.download(PRIMARY_SYMBOL, start=start_date, end=end_date, progress=False, timeout=10)
-        
-        all_plans = generate_final_analysis(primary_data, market_context)
-        all_plans.sort(key=lambda x: x['confidence_score'], reverse=True)
-
-        output_data = {"last_update": datetime.now().strftime('%Y-%m-%d %H:%M:%S'), "trade_plans": all_plans[:4]}
-
-        with open(OUTPUT_FILENAME, 'w') as f:
-            json.dump(output_data, f, indent=4)
-            
-        print(f"Final standalone analysis complete. {len(all_plans[:4])} trade plans saved to '{OUTPUT_FILENAME}'.")
-
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+    print(f"Robust analysis complete. {len(final_plans)} trade plans saved to '{OUTPUT_FILENAME}'.")
 
 if __name__ == "__main__":
     main()
