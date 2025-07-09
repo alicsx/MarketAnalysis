@@ -1,49 +1,34 @@
-# نام Workflow که در تب Actions گیت‌هاب نمایش داده می‌شود
-name: Analyze Daily Liquidity
+# analyze_liquidity.yml - Final Version with Package Upgrade
+name: Analyze Daily Liquidity V6
 
-# تریگرها: چه زمانی این Workflow اجرا شود
 on:
-  # اجرای خودکار روزانه در ساعت ۲ بامداد به وقت جهانی (UTC)
   schedule:
     - cron: '0 2 * * *'
-  
-  # اجازه اجرای دستی از طریق صفحه Actions در گیت‌هاب
   workflow_dispatch:
 
-# تعریف کارها (Jobs) که باید انجام شوند
 jobs:
   analyze-and-commit:
-    # استفاده از آخرین نسخه اوبونتو برای اجرا
     runs-on: ubuntu-latest
-
-    # مراحل اجرایی کار
     steps:
-      # مرحله ۱: دانلود کردن کدهای ریپازیتوری شما به ماشین مجازی
       - name: Check out repository code
         uses: actions/checkout@v4
 
-      # مرحله ۲: نصب و راه‌اندازی پایتون نسخه 3.10
       - name: Set up Python 3.10
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
       
-      # مرحله ۳: نصب کتابخانه‌های مورد نیاز اسکریپت پایتون
-      - name: Install Python dependencies
+      # FIX: ارتقاء کتابخانه‌ها برای حل مشکل ناسازگاری
+      - name: Install and upgrade Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install yfinance pandas scipy pandas-ta
+          pip install --upgrade numpy pandas yfinance scipy pandas-ta
       
-      # مرحله ۴: اجرای اسکریپت اصلی تحلیلگر نقدینگی
       - name: Run liquidity analyzer script
-        run: python liquidity_analyzer.py
+        run: python liquidity_analyzer_v6.py # نام اسکریپت جدید
         
-      # مرحله ۵: کامیت و پوش کردن خودکار فایل تولید شده (liquidity_levels.txt)
-      # این اکشن به طور خودکار تغییرات را تشخیص داده و به ریپازیتوری شما کامیت می‌کند
       - name: Commit and push if it changed
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          # پیامی که برای کامیت ثبت می‌شود
-          commit_message: '📈  (Automated) Update daily liquidity levels'
-          # فایلی که باید کامیت شود
-          file_pattern: liquidity_levels.txt
+          commit_message: '🚀 (AI V6) Update predictive liquidity analysis'
+          file_pattern: liquidity_analysis_v6.json # نام فایل خروجی جدید
