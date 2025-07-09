@@ -1,13 +1,3 @@
 {
-    "analysis": {
-        "EURUSD": {
-            "trade_plans": []
-        },
-        "GBPUSD": {
-            "trade_plans": []
-        },
-        "AUDUSD": {
-            "trade_plans": []
-        }
-    }
+    "analysis": {}
 }
