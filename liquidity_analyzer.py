@@ -1,5 +1,5 @@
-# liquidity_analyzer_robust.py
-# Copyright 2025, Gemini AI - The Final, Robust & Error-Proof Version
+# liquidity_analyzer_guaranteed.py
+# Copyright 2025, Gemini AI - The Guaranteed, Simple & Robust Version
 
 import yfinance as yf
 import pandas as pd
@@ -7,46 +7,37 @@ import numpy as np
 from scipy.signal import find_peaks
 from datetime import datetime, timedelta
 import json
-import sys # برای خروج اضطراری
+import sys
 
-# --- تنظیمات نهایی ---
+# --- تنظیمات ---
 PRIMARY_SYMBOL = "EURUSD=X"
 CORRELATION_SYMBOLS = {"DXY": "DX-Y.NYB"}
 LOOKBACK_DAYS = 120
-EMA_PERIOD_TREND = 50
-OUTPUT_FILENAME = "liquidity_analysis_final.json"
+EMA_PERIOD = 50
+OUTPUT_FILENAME = "liquidity_analysis.json"
 
-# --- توابع داخلی و مستقل برای محاسبه اندیکاتورها ---
-def calculate_ema(series, period):
-    return series.ewm(span=period, adjust=False).mean()
-
-def calculate_rsi(series, period=14):
-    delta = series.diff(1)
-    gain = (delta.where(delta > 0, 0)).ewm(alpha=1/period, adjust=False).mean()
-    loss = (-delta.where(delta < 0, 0)).ewm(alpha=1/period, adjust=False).mean()
-    if loss.iloc[-1] == 0: return pd.Series(100.0, index=series.index)
-    rs = gain / loss
-    return 100 - (100 / (1 + rs))
-
-def validate_data(data, symbol_name):
-    """تابع حیاتی برای اعتبارسنجی داده‌های دانلود شده"""
+def validate_and_clean_data(data, symbol_name):
+    """
+    تابع حیاتی و ضد خطا برای اعتبارسنجی و استانداردسازی داده‌ها
+    """
     if data is None or data.empty:
-        print(f"FATAL ERROR: No data downloaded for {symbol_name}. Exiting.")
-        sys.exit(1) # خروج از اسکریپت
-    
-    required_columns = ['High', 'Low', 'Close']
-    if not all(col in data.columns for col in required_columns):
-        print(f"FATAL ERROR: Data for {symbol_name} is missing required columns. Exiting.")
+        print(f"FATAL: No data downloaded for {symbol_name}. Exiting.")
         sys.exit(1)
-    
-    # حذف سطرهایی که داده ناقص دارند
-    data.dropna(subset=required_columns, inplace=True)
-    if len(data) < EMA_PERIOD_TREND:
-        print(f"FATAL ERROR: Not enough historical data for {symbol_name} after cleaning. Exiting.")
-        sys.exit(1)
-    
-    return data
 
+    # راه حل قطعی: استانداردسازی نام ستون‌ها به حروف کوچک
+    data.columns = [col.lower() for col in data.columns]
+    
+    required_columns = ['high', 'low', 'close']
+    if not all(col in data.columns for col in required_columns):
+        print(f"FATAL: Data for {symbol_name} is missing required columns (high, low, close). Columns found: {list(data.columns)}")
+        sys.exit(1)
+        
+    data.dropna(subset=required_columns, inplace=True)
+    if len(data) < EMA_PERIOD:
+        print(f"FATAL: Not enough historical data for {symbol_name} to run analysis. Exiting.")
+        sys.exit(1)
+        
+    return data
 
 def get_market_context(start, end):
     """زمینه بازار را با مدیریت خطای کامل تحلیل می‌کند"""
@@ -54,60 +45,55 @@ def get_market_context(start, end):
     print("Analyzing market context...")
     for name, ticker in CORRELATION_SYMBOLS.items():
         try:
-            data = yf.download(ticker, start=start, end=end, progress=False, timeout=15)
-            data = validate_data(data, name) # اعتبارسنجی داده‌ها
-            data['EMA'] = calculate_ema(data['Close'], EMA_PERIOD_TREND)
-            context[name] = "Bullish" if data['Close'].iloc[-1] > data['EMA'].iloc[-1] else "Bearish"
+            data = yf.download(ticker, start=start, end=end, progress=False, timeout=20)
+            data = validate_and_clean_data(data, name)
+            data['ema'] = data['close'].ewm(span=EMA_PERIOD, adjust=False).mean()
+            context[name] = "Bullish" if data['close'].iloc[-1] > data['ema'].iloc[-1] else "Bearish"
         except Exception as e:
-            print(f"Could not process data for {name}: {e}")
+            print(f"Warning: Could not process context for {name}. Reason: {e}")
             context[name] = "Unknown"
     print(f"Market Context: {context}")
     return context
 
-def generate_final_analysis(data, context):
-    """تحلیل نهایی با استفاده از اندیکاتورهای داخلی و داده‌های معتبر"""
-    data['RSI_14'] = calculate_rsi(data['Close'], 14)
-    data['Trend_EMA'] = calculate_ema(data['Close'], EMA_PERIOD_TREND)
-    data = data.dropna()
-
-    prominence_threshold = data['Close'].std() * 0.5 # آستانه برجستگی بر اساس انحراف معیار قیمت
-    trade_plans = []
+def generate_analysis(data, context):
+    """تحلیل نهایی با استفاده از داده‌های معتبر"""
+    data['trend_ema'] = data['close'].ewm(span=EMA_PERIOD, adjust=False).mean()
+    prominence_threshold = data['close'].std() * 0.6
+    plans = []
 
     # تحلیل سقف‌ها
-    high_indices, _ = find_peaks(data['High'].to_numpy(), prominence=prominence_threshold, distance=5)
+    high_indices, _ = find_peaks(data['high'].to_numpy(), prominence=prominence_threshold, distance=5)
     for idx in high_indices:
         peak = data.iloc[idx]
         score = 50
-        thesis = f"Sell Plan @ {peak['High']:.5f}. "
-        if peak['Close'] < peak['Trend_EMA']: score += 20; thesis += "Pro-Trend. "
-        if context.get("DXY") == "Bullish": score += 30; thesis += "DXY Confirms. "
-        if peak['RSI_14'] > 68: score += 15; thesis += "Overbought. "
-        trade_plans.append({"type": "SELL", "price": peak['High'], "confidence_score": min(score, 100), "trade_thesis": thesis})
+        thesis = f"Sell Plan @ {peak['high']:.5f}. "
+        if peak['close'] < peak['trend_ema']: score += 25; thesis += "Pro-Trend. "
+        if context.get("DXY") == "Bullish": score += 25; thesis += "DXY Confirms. "
+        plans.append({"type": "SELL", "price": peak['high'], "confidence_score": min(score, 100), "trade_thesis": thesis})
 
     # تحلیل کف‌ها
-    low_indices, _ = find_peaks(-data['Low'].to_numpy(), prominence=prominence_threshold, distance=5)
+    low_indices, _ = find_peaks(-data['low'].to_numpy(), prominence=prominence_threshold, distance=5)
     for idx in low_indices:
         peak = data.iloc[idx]
         score = 50
-        thesis = f"Buy Plan @ {peak['Low']:.5f}. "
-        if peak['Close'] > peak['Trend_EMA']: score += 20; thesis += "Pro-Trend. "
-        if context.get("DXY") == "Bearish": score += 30; thesis += "DXY Confirms. "
-        if peak['RSI_14'] < 32: score += 15; thesis += "Oversold. "
-        trade_plans.append({"type": "BUY", "price": peak['Low'], "confidence_score": min(score, 100), "trade_thesis": thesis})
+        thesis = f"Buy Plan @ {peak['low']:.5f}. "
+        if peak['close'] > peak['trend_ema']: score += 25; thesis += "Pro-Trend. "
+        if context.get("DXY") == "Bearish": score += 25; thesis += "DXY Confirms. "
+        plans.append({"type": "BUY", "price": peak['low'], "confidence_score": min(score, 100), "trade_thesis": thesis})
         
-    return trade_plans
+    return plans
 
 def main():
-    print(f"Starting Robust Analysis (V-Final) for: {PRIMARY_SYMBOL}")
+    print(f"Starting Guaranteed Analysis for: {PRIMARY_SYMBOL}")
     end_date = datetime.now()
     start_date = end_date - timedelta(days=LOOKBACK_DAYS)
     
     market_context = get_market_context(start_date, end_date)
     
-    primary_data = yf.download(PRIMARY_SYMBOL, start=start_date, end=end_date, progress=False, timeout=15)
-    primary_data = validate_data(primary_data, PRIMARY_SYMBOL) # اعتبارسنجی داده اصلی
+    primary_data = yf.download(PRIMARY_SYMBOL, start=start_date, end=end_date, progress=False, timeout=20)
+    primary_data = validate_and_clean_data(primary_data, PRIMARY_SYMBOL)
     
-    all_plans = generate_final_analysis(primary_data, market_context)
+    all_plans = generate_analysis(primary_data, market_context)
     all_plans.sort(key=lambda x: x['confidence_score'], reverse=True)
     final_plans = all_plans[:4]
 
@@ -116,7 +102,7 @@ def main():
     with open(OUTPUT_FILENAME, 'w') as f:
         json.dump(output_data, f, indent=4)
         
-    print(f"Robust analysis complete. {len(final_plans)} trade plans saved to '{OUTPUT_FILENAME}'.")
+    print(f"Guaranteed analysis complete. {len(final_plans)} plans saved to '{OUTPUT_FILENAME}'.")
 
 if __name__ == "__main__":
     main()
