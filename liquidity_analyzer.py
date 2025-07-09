@@ -1,5 +1,5 @@
-# AI_Strategist_Complete.py
-# Copyright 2025, Gemini AI - Final Corrected & Complete Version
+# multi_currency_final_corrected.py
+# Copyright 2025, Gemini AI - Final Corrected Logic Version
 
 import yfinance as yf
 import pandas as pd
@@ -12,18 +12,16 @@ import sys
 # --- تنظیمات ---
 PRIMARY_SYMBOLS = ["EURUSD=X", "GBPUSD=X", "AUDUSD=X", "USDJPY=X", "USDCAD=X", "NZDUSD=X"]
 CORRELATION_SYMBOLS = {"DXY": "DX-Y.NYB"}
-LOOKBACK_DAYS = 252
+LOOKBACK_DAYS = 120
 EMA_PERIOD = 50
-TOP_N_PLANS_TO_REPORT = 5
+TOP_N_PLANS_PER_SYMBOL = 2 # <<<< تعداد پلن‌های برتر برای هر ارز
 OUTPUT_FILENAME = "multi_currency_analysis.json"
 
-def validate_data(data, symbol_name):
+# (توابع validate_data, get_market_context, generate_analysis بدون تغییر باقی می‌مانند)
+def validate_and_standardize_data(data, symbol_name):
     if data is None or data.empty: return None
-    if isinstance(data.columns, pd.MultiIndex):
-        data.columns = [col[0].lower() for col in data.columns]
-    else:
-        data.columns = [col.lower() for col in data.columns]
-    required = ['open', 'high', 'low', 'close']
+    data.columns = [col[0].lower() if isinstance(col, tuple) else col.lower() for col in data.columns]
+    required = ['high', 'low', 'close']
     if not all(col in data.columns for col in required): return None
     data.dropna(subset=required, inplace=True)
     if len(data) < EMA_PERIOD: return None
@@ -35,92 +33,85 @@ def get_market_context(start, end):
     for name, ticker in CORRELATION_SYMBOLS.items():
         try:
             data = yf.download(ticker, start=start, end=end, progress=False, timeout=20)
-            data = validate_data(data, name)
+            data = validate_and_standardize_data(data, name)
             if data is not None:
                 data['ema'] = data['close'].ewm(span=EMA_PERIOD, adjust=False).mean()
                 context[name] = "Bullish" if data['close'].iloc[-1] > data['ema'].iloc[-1] else "Bearish"
-        except Exception:
-            context[name] = "Unknown"
+        except Exception: context[name] = "Unknown"
     print(f"Market Context: {context}")
     return context
 
-def find_complete_plans(data, context, symbol_name):
-    """
-    نسخه کامل و تصحیح شده: تمام فرصت‌های بالقوه را با امتیازشان پیدا می‌کند
-    """
-    if data is None: return []
-    
+def generate_analysis(data, context):
     data['trend_ema'] = data['close'].ewm(span=200, adjust=False).mean()
     main_trend = "Up" if data['close'].iloc[-1] > data['trend_ema'].iloc[-1] else "Down"
-    prominence_threshold = data['close'].std() * 0.5 # کمی آستانه را منعطف‌تر می‌کنیم
+    prominence_threshold = data['close'].std() * 0.6
     plans = []
-
-    # *** بخش تصحیح شده: افزودن حلقه‌های پردازش ***
-    # تحلیل سقف‌ها
-    swing_highs, _ = find_peaks(data['high'], prominence=prominence_threshold, distance=5)
-    for idx in swing_highs:
-        peak_price = data['high'].iloc[idx]
+    
+    high_indices, _ = find_peaks(data['high'].to_numpy(), prominence=prominence_threshold, distance=5)
+    for idx in high_indices:
+        peak = data.iloc[idx]
         score = 50
-        factors = ["Swing High"]
-        
-        # بررسی زمینه بازار
-        if main_trend == "Down": score += 25; factors.append("Pro-Trend")
-        if context.get("DXY") == "Bullish": score += 25; factors.append("DXY Confirms")
-        
-        plans.append({"symbol": symbol_name, "type": "SELL", "price": peak_price, "score": min(score, 100), "thesis": " + ".join(factors)})
+        thesis = f"Sell Plan @ {peak['high']:.5f}. "
+        if main_trend == "Down": score += 25; thesis += "Pro-Trend. "
+        if context.get("DXY") == "Bullish": score += 25; thesis += "DXY Confirms. "
+        plans.append({"type": "SELL", "price": peak['high'], "confidence_score": min(score, 100), "trade_thesis": thesis})
 
-    # تحلیل کف‌ها
-    swing_lows, _ = find_peaks(-data['low'], prominence=prominence_threshold, distance=5)
-    for idx in swing_lows:
-        peak_price = data['low'].iloc[idx]
+    low_indices, _ = find_peaks(-data['low'].to_numpy(), prominence=prominence_threshold, distance=5)
+    for idx in low_indices:
+        peak = data.iloc[idx]
         score = 50
-        factors = ["Swing Low"]
-
-        if main_trend == "Up": score += 25; factors.append("Pro-Trend")
-        if context.get("DXY") == "Bearish": score += 25; factors.append("DXY Confirms")
-        
-        plans.append({"symbol": symbol_name, "type": "BUY", "price": peak_price, "score": min(score, 100), "thesis": " + ".join(factors)})
-        
+        thesis = f"Buy Plan @ {peak['low']:.5f}. "
+        if main_trend == "Up": score += 25; thesis += "Pro-Trend. "
+        if context.get("DXY") == "Bearish": score += 25; thesis += "DXY Confirms. "
+        plans.append({"type": "BUY", "price": peak['low'], "confidence_score": min(score, 100), "trade_thesis": thesis})
     return plans
 
+
 def main():
-    print("--- Starting Corrected AI Analysis ---")
+    print("--- Starting Corrected Multi-Currency Analysis ---")
     end_date = datetime.now()
     start_date = end_date - timedelta(days=LOOKBACK_DAYS)
+    
     market_context = get_market_context(start_date, end_date)
-    
-    master_plan_list = []
+    all_analyses = {}
 
-    # مرحله ۱: جمع‌آوری تمام پلن‌ها
+    # --- منطق اصلاح شده ---
+    # حلقه بر روی تمام نمادهای اصلی
     for symbol in PRIMARY_SYMBOLS:
-        print(f"--- Scanning {symbol} for opportunities ---")
-        primary_data = yf.download(symbol, start=start_date, end=end_date, progress=False, timeout=20)
-        primary_data = validate_data(primary_data, symbol)
-        if primary_data is None: continue
-        
-        clean_symbol_name = symbol.replace("=X", "")
-        potential_plans = find_complete_plans(primary_data, market_context, clean_symbol_name)
-        master_plan_list.extend(potential_plans)
+        print(f"\n--- Analyzing {symbol} ---")
+        try:
+            primary_data = yf.download(symbol, start=start_date, end=end_date, progress=False, timeout=20)
+            primary_data = validate_and_standardize_data(primary_data, symbol)
+            
+            if primary_data is None:
+                continue
 
-    # مرحله ۲: رتبه‌بندی تمام پلن‌ها
-    master_plan_list.sort(key=lambda x: x['score'], reverse=True)
-    
-    # مرحله ۳: انتخاب بهترین‌ها
-    top_plans = master_plan_list[:TOP_N_PLANS_TO_REPORT]
-    
-    # مرحله ۴: ساختار نهایی JSON
-    final_analysis = {}
-    for plan in top_plans:
-        symbol = plan.pop('symbol')
-        if symbol not in final_analysis:
-            final_analysis[symbol] = {"trade_plans": []}
-        final_analysis[symbol]["trade_plans"].append(plan)
+            # ۱. تمام پلن‌های بالقوه فقط برای همین ارز پیدا می‌شود
+            potential_plans = generate_analysis(primary_data, market_context)
+            
+            # ۲. پلن‌های همین ارز بر اساس امتیاز مرتب می‌شوند
+            potential_plans.sort(key=lambda x: x['confidence_score'], reverse=True)
+            
+            # ۳. بهترین پلن‌ها برای همین ارز انتخاب می‌شوند
+            top_plans_for_this_symbol = potential_plans[:TOP_N_PLANS_PER_SYMBOL]
+            
+            # ۴. تحلیل نهایی برای این ارز به خروجی اضافه می‌شود
+            clean_symbol_name = symbol.replace("=X", "")
+            all_analyses[clean_symbol_name] = {"trade_plans": top_plans_for_this_symbol}
+            print(f"Analysis for {clean_symbol_name} complete. Top {len(top_plans_for_this_symbol)} plans selected.")
 
-    output_data = {"analysis": final_analysis}
+        except Exception as e:
+            print(f"ERROR while processing {symbol}: {e}")
+
+    output_data = {
+        "last_update": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        "analysis": all_analyses
+    }
+
     with open(OUTPUT_FILENAME, 'w') as f:
         json.dump(output_data, f, indent=4)
         
-    print(f"\n--- Corrected analysis complete. Top {len(top_plans)} plans saved to '{OUTPUT_FILENAME}' ---")
+    print(f"\n--- Multi-currency analysis complete. Results for all symbols saved to '{OUTPUT_FILENAME}' ---")
 
 if __name__ == "__main__":
     main()
