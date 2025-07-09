@@ -1,0 +1,133 @@
+{
+    "last_update": "2025-07-09 23:08:24",
+    "analysis": {
+        "EURUSD": {
+            "trade_plans": [
+                {
+                    "type": "BUY",
+                    "price": 1.1075055599212646,
+                    "confidence_score": 100,
+                    "trade_thesis": "Buy Plan @ 1.10751. Pro-Trend. DXY Confirms. "
+                },
+                {
+                    "type": "SELL",
+                    "price": 1.1546543836593628,
+                    "confidence_score": 50,
+                    "trade_thesis": "Sell Plan @ 1.15465. "
+                }
+            ]
+        },
+        "GBPUSD": {
+            "trade_plans": [
+                {
+                    "type": "BUY",
+                    "price": 1.314198613166809,
+                    "confidence_score": 100,
+                    "trade_thesis": "Buy Plan @ 1.31420. Pro-Trend. DXY Confirms. "
+                },
+                {
+                    "type": "BUY",
+                    "price": 1.3373453617095947,
+                    "confidence_score": 100,
+                    "trade_thesis": "Buy Plan @ 1.33735. Pro-Trend. DXY Confirms. "
+                },
+                {
+                    "type": "BUY",
+                    "price": 1.2722808122634888,
+                    "confidence_score": 75,
+                    "trade_thesis": "Buy Plan @ 1.27228. DXY Confirms. "
+                },
+                {
+                    "type": "SELL",
+                    "price": 1.3204457759857178,
+                    "confidence_score": 50,
+                    "trade_thesis": "Sell Plan @ 1.32045. "
+                }
+            ]
+        },
+        "AUDUSD": {
+            "trade_plans": [
+                {
+                    "type": "BUY",
+                    "price": 0.636241614818573,
+                    "confidence_score": 100,
+                    "trade_thesis": "Buy Plan @ 0.63624. Pro-Trend. DXY Confirms. "
+                },
+                {
+                    "type": "BUY",
+                    "price": 0.6408100128173828,
+                    "confidence_score": 100,
+                    "trade_thesis": "Buy Plan @ 0.64081. Pro-Trend. DXY Confirms. "
+                },
+                {
+                    "type": "BUY",
+                    "price": 0.6373498439788818,
+                    "confidence_score": 100,
+                    "trade_thesis": "Buy Plan @ 0.63735. Pro-Trend. DXY Confirms. "
+                },
+                {
+                    "type": "SELL",
+                    "price": 0.6386797428131104,
+                    "confidence_score": 75,
+                    "trade_thesis": "Sell Plan @ 0.63868. Pro-Trend. "
+                }
+            ]
+        },
+        "USDJPY": {
+            "trade_plans": [
+                {
+                    "type": "SELL",
+                    "price": 147.96200561523438,
+                    "confidence_score": 75,
+                    "trade_thesis": "Sell Plan @ 147.96201. Pro-Trend. "
+                },
+                {
+                    "type": "SELL",
+                    "price": 145.906005859375,
+                    "confidence_score": 75,
+                    "trade_thesis": "Sell Plan @ 145.90601. Pro-Trend. "
+                },
+                {
+                    "type": "BUY",
+                    "price": 144.6020050048828,
+                    "confidence_score": 75,
+                    "trade_thesis": "Buy Plan @ 144.60201. DXY Confirms. "
+                },
+                {
+                    "type": "BUY",
+                    "price": 139.89199829101562,
+                    "confidence_score": 75,
+                    "trade_thesis": "Buy Plan @ 139.89200. DXY Confirms. "
+                }
+            ]
+        },
+        "USDCAD": {
+            "trade_plans": [
+                {
+                    "type": "SELL",
+                    "price": 1.4014999866485596,
+                    "confidence_score": 75,
+                    "trade_thesis": "Sell Plan @ 1.40150. Pro-Trend. "
+                },
+                {
+                    "type": "SELL",
+                    "price": 1.3797500133514404,
+                    "confidence_score": 75,
+                    "trade_thesis": "Sell Plan @ 1.37975. Pro-Trend. "
+                },
+                {
+                    "type": "BUY",
+                    "price": 1.4027600288391113,
+                    "confidence_score": 75,
+                    "trade_thesis": "Buy Plan @ 1.40276. DXY Confirms. "
+                },
+                {
+                    "type": "BUY",
+                    "price": 1.3760299682617188,
+                    "confidence_score": 75,
+                    "trade_thesis": "Buy Plan @ 1.37603. DXY Confirms. "
+                }
+            ]
+        }
+    }
+}
