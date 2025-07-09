@@ -1,16 +1,19 @@
-# liquidity_analyzer_v2.py
-# Copyright 2025, Gemini AI - Advanced Version
+# liquidity_analyzer_v3.py
+# Copyright 2025, Gemini AI - Multi-Timeframe & Comprehensive Analysis
 
 import yfinance as yf
 import pandas as pd
 import numpy as np
 from scipy.signal import find_peaks
 from datetime import datetime, timedelta
+import json
 
 # --- تنظیمات اصلی ---
 SYMBOL = "EURUSD=X"
-LOOKBACK_DAYS = 60  # دوره تحلیل را برای یافتن سطوح معتبرتر افزایش می‌دهیم
-OUTPUT_FILENAME = "liquidity_levels.txt"
+LOOKBACK_DAYS_DAILY = 60      # دوره تحلیل روزانه
+LOOKBACK_DAYS_WEEKLY = 365    # دوره تحلیل هفتگی (یک سال)
+NUM_LEVELS_TO_KEEP = 2        # تعداد سطوح برتر برای هر نوع (سقف/کف)
+OUTPUT_FILENAME = "liquidity_analysis.json" # خروجی جدید با فرمت JSON
 
 def calculate_atr(data, period=14):
     """محاسبه اندیکاتور ATR"""
@@ -22,75 +25,88 @@ def calculate_atr(data, period=14):
     atr = true_range.rolling(period).mean()
     return atr
 
-def analyze_and_save_liquidity_v2():
+def find_key_levels(data, timeframe_tag):
     """
-    با استفاده از تحلیل پیشرفته قله‌ها، مهم‌ترین سطوح نقدینگی را شناسایی می‌کند.
+    منطق اصلی برای یافتن سطوح برجسته در یک دیتافریم مشخص.
     """
-    print(f"شروع تحلیل پیشرفته برای نماد: {SYMBOL}")
+    if data.empty:
+        return []
+
+    data['ATR'] = calculate_atr(data)
+    data = data.dropna()
+
+    prominence_threshold = data['ATR'].mean() * 0.5
+    levels = []
+
+    # --- یافتن قله‌ها (Highs) ---
+    # FIX: تبدیل به numpy array برای جلوگیری از خطا
+    high_peaks_indices, high_props = find_peaks(data['High'].to_numpy(), prominence=prominence_threshold, distance=3)
+    
+    for i, idx in enumerate(high_peaks_indices):
+        level_data = data.iloc[idx]
+        levels.append({
+            "type": "high",
+            "price": level_data['High'],
+            "prominence": high_props['prominences'][i],
+            "timeframe": timeframe_tag,
+            "atr": level_data['ATR']
+        })
+
+    # --- یافتن دره‌ها (Lows) ---
+    # FIX: تبدیل به numpy array برای جلوگیری از خطا
+    low_peaks_indices, low_props = find_peaks(-data['Low'].to_numpy(), prominence=prominence_threshold, distance=3)
+
+    for i, idx in enumerate(low_peaks_indices):
+        level_data = data.iloc[idx]
+        levels.append({
+            "type": "low",
+            "price": level_data['Low'],
+            "prominence": low_props['prominences'][i],
+            "timeframe": timeframe_tag,
+            "atr": level_data['ATR']
+        })
+        
+    return levels
+
+def analyze_multi_timeframe():
+    print(f"شروع تحلیل جامع چند تایم‌فریمی برای: {SYMBOL}")
     try:
-        # ۱. دریافت داده‌ها و محاسبه ATR
+        # ۱. دریافت داده‌های روزانه و هفتگی
         end_date = datetime.now()
-        start_date = end_date - timedelta(days=LOOKBACK_DAYS)
-        data = yf.download(SYMBOL, start=start_date, end=end_date, interval="1d")
+        daily_data = yf.download(SYMBOL, start=end_date - timedelta(days=LOOKBACK_DAYS_DAILY), end=end_date, interval="1d")
+        weekly_data = yf.download(SYMBOL, start=end_date - timedelta(days=LOOKBACK_DAYS_WEEKLY), end=end_date, interval="1wk")
 
-        if data.empty:
-            print("خطا: داده‌ای دریافت نشد.")
-            return
-            
-        data['ATR'] = calculate_atr(data)
-        data = data.dropna() # حذف سطرهای با مقدار NaN
-
-        # ۲. یافتن قله‌ها (Swing Highs) و دره‌ها (Swing Lows) با تحلیل برجستگی
-        # یک حد آستانه پویا برای برجستگی بر اساس میانگین ATR تعیین می‌کنیم
-        prominence_threshold = data['ATR'].mean() * 0.5 
-
-        # یافتن قله‌ها
-        high_peaks_indices, high_properties = find_peaks(data['High'], prominence=prominence_threshold, distance=5)
+        # ۲. تحلیل هر دو تایم‌فریم
+        daily_levels = find_key_levels(daily_data, "D1")
+        weekly_levels = find_key_levels(weekly_data, "W1")
         
-        # یافتن دره‌ها (با معکوس کردن سری داده)
-        low_peaks_indices, low_properties = find_peaks(-data['Low'], prominence=prominence_threshold, distance=5)
+        all_levels = daily_levels + weekly_levels
 
-        if len(high_peaks_indices) == 0 or len(low_peaks_indices) == 0:
-            print("هشدار: قله یا دره برجسته‌ای در دوره مشخص شده یافت نشد.")
-            return
+        # ۳. فیلتر کردن و مرتب‌سازی نهایی برای یافتن بهترین سطوح
+        highs = sorted([l for l in all_levels if l['type'] == 'high'], key=lambda x: x['prominence'], reverse=True)
+        lows = sorted([l for l in all_levels if l['type'] == 'low'], key=lambda x: x['prominence'], reverse=True)
 
-        # ۳. انتخاب برجسته‌ترین قله و دره
-        most_prominent_high_index = high_peaks_indices[np.argmax(high_properties['prominences'])]
-        most_prominent_low_index = low_peaks_indices[np.argmax(low_properties['prominences'])]
-
-        # ۴. استخراج اطلاعات سطح نقدینگی نهایی
-        key_high_data = data.iloc[most_prominent_high_index]
-        key_low_data = data.iloc[most_prominent_low_index]
+        # انتخاب N سطح برتر از هر کدام
+        final_levels = highs[:NUM_LEVELS_TO_KEEP] + lows[:NUM_LEVELS_TO_KEEP]
         
-        key_high_price = key_high_data['High']
-        key_high_date = key_high_data.name.strftime('%Y-%m-%d')
-        key_high_atr = key_high_data['ATR']
+        # حذف کلید برجستگی که دیگر برای ربات لازم نیست
+        for level in final_levels:
+            del level['prominence']
+
+        output_data = {
+            "symbol": SYMBOL,
+            "last_update": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            "liquidity_levels": final_levels
+        }
+
+        # ۴. ذخیره در فایل JSON
+        with open(OUTPUT_FILENAME, 'w') as f:
+            json.dump(output_data, f, indent=4)
         
-        key_low_price = key_low_data['Low']
-        key_low_date = key_low_data.name.strftime('%Y-%m-%d')
-        key_low_atr = key_low_data['ATR']
-        
-        last_update_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
-        print(f"برجسته‌ترین سطح بالا: {key_high_price:.5f} (ATR: {key_high_atr:.5f}) در تاریخ: {key_high_date}")
-        print(f"برجسته‌ترین سطح پایین: {key_low_price:.5f} (ATR: {key_low_atr:.5f}) در تاریخ: {key_low_date}")
-
-        # ۵. ساخت خروجی برای MQL4
-        output_content = (
-            f"key_high:{key_high_price:.5f}\n"
-            f"key_high_atr:{key_high_atr:.5f}\n"
-            f"key_low:{key_low_price:.5f}\n"
-            f"key_low_atr:{key_low_atr:.5f}\n"
-            f"last_update:{last_update_time}\n"
-        )
-
-        with open(OUTPUT_FILENAME, "w") as f:
-            f.write(output_content)
-            
-        print(f"تحلیل پیشرفته با موفقیت در فایل '{OUTPUT_FILENAME}' ذخیره شد.")
+        print(f"تحلیل جامع با موفقیت انجام و {len(final_levels)} سطح کلیدی در '{OUTPUT_FILENAME}' ذخیره شد.")
 
     except Exception as e:
         print(f"یک خطای غیرمنتظره رخ داد: {e}")
 
 if __name__ == "__main__":
-    analyze_and_save_liquidity_v2()
+    analyze_multi_timeframe()
