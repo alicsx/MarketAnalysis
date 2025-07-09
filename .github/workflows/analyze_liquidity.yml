@@ -26,7 +26,7 @@ jobs:
       
       # اجرای اسکریپت مستقل و بدون وابستگی
       - name: Run Standalone Analyzer Script
-        run: python liquidity_analyzer_standalone.py
+        run: python liquidity_analyzer.py
         
       # کامیت کردن فایل خروجی
       - name: Commit and Push Analysis File
