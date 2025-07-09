@@ -1,137 +1,141 @@
-# liquidity_analyzer_v4.py
-# Copyright 2025, Gemini AI - Context-Aware & Scored Analysis
+# liquidity_analyzer_v5.py
+# Copyright 2025, Gemini AI - Dynamic, ML-Ready Analysis
 
 import yfinance as yf
 import pandas as pd
 import numpy as np
+import pandas_ta as ta
 from scipy.signal import find_peaks
 from datetime import datetime, timedelta
 import json
 
 # --- تنظیمات اصلی ---
 SYMBOL = "EURUSD=X"
-LOOKBACK_DAYS_DAILY = 90
-LOOKBACK_DAYS_WEEKLY = 400
+LOOKBACK_DAYS_DAILY = 120
+LOOKBACK_DAYS_WEEKLY = 500
 NUM_LEVELS_TO_KEEP = 2
 EMA_PERIOD_TREND = 50
-OUTPUT_FILENAME = "liquidity_analysis_v4.json"
+OUTPUT_FILENAME = "liquidity_analysis_v5.json"
 
-def calculate_atr(data, period=14):
-    """محاسبه اندیکاتور ATR"""
-    data = data.copy()
-    high_low = data['High'] - data['Low']
-    high_close = np.abs(data['High'] - data['Close'].shift())
-    low_close = np.abs(data['Low'] - data['Close'].shift())
-    ranges = pd.concat([high_low, high_close, low_close], axis=1)
-    true_range = np.max(ranges, axis=1)
-    data['ATR'] = true_range.ewm(alpha=1/period, adjust=False).mean()
-    return data
+def get_market_volatility(data):
+    """میزان کلی نوسانات بازار را بر اساس ATR نرمال شده برمی‌گرداند"""
+    atr = data['ATR'].iloc[-1]
+    price = data['Close'].iloc[-1]
+    normalized_atr = (atr / price) * 100
+    if normalized_atr > 0.8: return "High"
+    if normalized_atr < 0.4: return "Low"
+    return "Normal"
 
-def find_key_levels_v4(data, timeframe_tag, main_trend):
+def find_key_levels_v5(data, timeframe_tag, main_trend):
     """
-    منطق پیشرفته برای یافتن سطوح، امتیازدهی و شناسایی سطح ChoCH
+    منطق جامع برای یافتن سطوح، غنی‌سازی با ویژگی‌های جدید و امتیازدهی
     """
     if data.empty or len(data) < EMA_PERIOD_TREND:
         return []
 
-    data = calculate_atr(data)
+    # محاسبه اندیکاتورهای لازم
+    data.ta.atr(length=14, append=True)
+    data.ta.rsi(length=14, append=True)
+    data.ta.ema(length=20, append=True, col="Volume") # میانگین حجم
     data = data.dropna()
-
-    prominence_threshold = data['ATR'].mean() * 0.75
+    
+    market_volatility = get_market_volatility(data)
+    prominence_multiplier = 1.0 if market_volatility == "High" else 0.6
+    prominence_threshold = data['ATR_14'].mean() * prominence_multiplier
+    
     all_peaks = []
-
+    
     # --- یافتن قله‌ها (Highs) ---
     high_indices, high_props = find_peaks(data['High'].to_numpy(), prominence=prominence_threshold, distance=5)
     for i, idx in enumerate(high_indices):
-        # یافتن آخرین کف قبل از این قله برای سطح ChoCH
-        sub_data = data.iloc[:idx]
-        lows_before_high, _ = find_peaks(-sub_data['Low'].to_numpy(), prominence=prominence_threshold/2, distance=3)
-        choch_level = sub_data.iloc[lows_before_high[-1]]['Low'] if len(lows_before_high) > 0 else 0
+        peak_data = data.iloc[idx]
+        peak_date = peak_data.name.to_pydatetime()
         
+        # یافتن آخرین کف قبل از این قله
+        sub_data = data.loc[data.index < peak_date]
+        lows_before, _ = find_peaks(-sub_data['Low'].to_numpy(), prominence=prominence_threshold/2, distance=3)
+        choch_level = sub_data.iloc[lows_before[-1]]['Low'] if len(lows_before) > 0 else 0
+
         all_peaks.append({
             "type": "high",
-            "price": data.iloc[idx]['High'],
+            "price_zone_high": peak_data['High'],
+            "price_zone_low": peak_data['Open'] if peak_data['Open'] < peak_data['Close'] else peak_data['Close'],
             "prominence": high_props['prominences'][i],
-            "timeframe": timeframe_tag,
-            "atr": data.iloc[idx]['ATR'],
-            "trend": main_trend,
-            "choch_level": choch_level
+            "timeframe": timeframe_tag, "main_trend": main_trend,
+            "choch_level": choch_level,
+            "rsi_at_formation": round(peak_data['RSI_14'], 2),
+            "days_since_formation": (datetime.now() - peak_date).days,
+            "volume_ratio": round(peak_data['Volume'] / peak_data['Volume_EMA_20'], 2) if peak_data['Volume_EMA_20'] > 0 else 1
         })
 
     # --- یافتن دره‌ها (Lows) ---
     low_indices, low_props = find_peaks(-data['Low'].to_numpy(), prominence=prominence_threshold, distance=5)
     for i, idx in enumerate(low_indices):
-        # یافتن آخرین سقف قبل از این دره برای سطح ChoCH
-        sub_data = data.iloc[:idx]
-        highs_before_low, _ = find_peaks(sub_data['High'].to_numpy(), prominence=prominence_threshold/2, distance=3)
-        choch_level = sub_data.iloc[highs_before_low[-1]]['High'] if len(highs_before_low) > 0 else 0
+        peak_data = data.iloc[idx]
+        peak_date = peak_data.name.to_pydatetime()
+        
+        # یافتن آخرین سقف قبل از این دره
+        sub_data = data.loc[data.index < peak_date]
+        highs_before, _ = find_peaks(sub_data['High'].to_numpy(), prominence=prominence_threshold/2, distance=3)
+        choch_level = sub_data.iloc[highs_before[-1]]['High'] if len(highs_before) > 0 else 0
 
         all_peaks.append({
             "type": "low",
-            "price": data.iloc[idx]['Low'],
+            "price_zone_high": peak_data['Open'] if peak_data['Open'] > peak_data['Close'] else peak_data['Close'],
+            "price_zone_low": peak_data['Low'],
             "prominence": low_props['prominences'][i],
-            "timeframe": timeframe_tag,
-            "atr": data.iloc[idx]['ATR'],
-            "trend": main_trend,
-            "choch_level": choch_level
+            "timeframe": timeframe_tag, "main_trend": main_trend,
+            "choch_level": choch_level,
+            "rsi_at_formation": round(peak_data['RSI_14'], 2),
+            "days_since_formation": (datetime.now() - peak_date).days,
+            "volume_ratio": round(peak_data['Volume'] / peak_data['Volume_EMA_20'], 2) if peak_data['Volume_EMA_20'] > 0 else 1
         })
         
     return all_peaks
 
-def calculate_validity_score(level):
-    """محاسبه امتیاز اعتبار برای هر سطح"""
-    score = 50
-    # امتیاز هم‌جهتی با روند
-    if (level['type'] == 'high' and level['trend'] == 'Down') or \
-       (level['type'] == 'low' and level['trend'] == 'Up'):
+def calculate_validity_score_v5(level):
+    """سیستم امتیازدهی چند عاملی"""
+    score = 40
+    # هم‌جهتی با روند
+    if (level['type'] == 'high' and level['main_trend'] == 'Down') or (level['type'] == 'low' and level['main_trend'] == 'Up'):
         score += 25
-    # امتیاز تایم‌فریم
-    if level['timeframe'] == 'W1':
+    # وضعیت RSI
+    if (level['type'] == 'high' and level['rsi_at_formation'] > 65) or (level['type'] == 'low' and level['rsi_at_formation'] < 35):
         score += 15
-    # امتیاز برجستگی
-    score += min(level['prominence'] / level['atr'] * 5, 10) # نرمال‌سازی امتیاز برجستگی
+    # حجم بالا
+    if level['volume_ratio'] > 1.5: score += 10
+    # تازگی سطح
+    if level['days_since_formation'] < 30: score += 10
+    
     return int(min(score, 100))
 
-def analyze_context_aware():
-    print(f"شروع تحلیل مبتنی بر زمینه (V4) برای: {SYMBOL}")
+def analyze_machine_learning_ready():
+    print(f"شروع تحلیل V5 (آماده برای یادگیری ماشین) برای: {SYMBOL}")
     try:
         end_date = datetime.now()
-        # ۱. دریافت داده و تشخیص روند اصلی از تایم روزانه
         daily_data = yf.download(SYMBOL, start=end_date - timedelta(days=LOOKBACK_DAYS_DAILY), end=end_date, interval="1d")
-        daily_data['EMA_Trend'] = daily_data['Close'].ewm(span=EMA_PERIOD_TREND, adjust=False).mean()
-        main_trend = "Up" if daily_data['Close'].iloc[-1] > daily_data['EMA_Trend'].iloc[-1] else "Down"
-        print(f"روند اصلی شناسایی شده: {main_trend}")
-
+        daily_data.ta.ema(length=EMA_PERIOD_TREND, append=True, col="Close")
+        main_trend = "Up" if daily_data['Close'].iloc[-1] > daily_data[f'EMA_{EMA_PERIOD_TREND}'].iloc[-1] else "Down"
+        
         weekly_data = yf.download(SYMBOL, start=end_date - timedelta(days=LOOKBACK_DAYS_WEEKLY), end=end_date, interval="1wk")
 
-        daily_levels = find_key_levels_v4(daily_data, "D1", main_trend)
-        weekly_levels = find_key_levels_v4(weekly_data, "W1", main_trend)
+        levels = find_key_levels_v5(daily_data, "D1", main_trend) + find_key_levels_v5(weekly_data, "W1", main_trend)
         
-        all_levels = daily_levels + weekly_levels
-
-        for level in all_levels:
-            level['validity_score'] = calculate_validity_score(level)
-        
-        # مرتب‌سازی بر اساس امتیاز و سپس برجستگی
-        all_levels.sort(key=lambda x: (x['validity_score'], x['prominence']), reverse=True)
-
-        highs = [l for l in all_levels if l['type'] == 'high']
-        lows = [l for l in all_levels if l['type'] == 'low']
-
-        final_levels = highs[:NUM_LEVELS_TO_KEEP] + lows[:NUM_LEVELS_TO_KEEP]
-
-        for level in final_levels:
-            del level['prominence']
+        for level in levels:
+            level['validity_score'] = calculate_validity_score_v5(level)
+            
+        levels.sort(key=lambda x: x['validity_score'], reverse=True)
+        final_levels = [l for l in levels if l['validity_score'] > 50][:NUM_LEVELS_TO_KEEP*2]
 
         output_data = {"last_update": datetime.now().strftime('%Y-%m-%d %H:%M:%S'), "liquidity_levels": final_levels}
 
         with open(OUTPUT_FILENAME, 'w') as f:
             json.dump(output_data, f, indent=4, default=str)
         
-        print(f"تحلیل جامع V4 با موفقیت انجام و {len(final_levels)} سطح کلیدی در '{OUTPUT_FILENAME}' ذخیره شد.")
+        print(f"تحلیل جامع V5 با موفقیت انجام و {len(final_levels)} سطح کلیدی در '{OUTPUT_FILENAME}' ذخیره شد.")
 
     except Exception as e:
         print(f"یک خطای غیرمنتظره رخ داد: {e}")
 
 if __name__ == "__main__":
-    analyze_context_aware()
+    analyze_machine_learning_ready()
