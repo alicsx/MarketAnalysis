@@ -27,7 +27,7 @@ jobs:
       
       # اجرای آخرین و نهایی‌ترین نسخه هوش مصنوعی
       - name: Run Final AI Analyzer Script
-        run: python liquidity_analyzer_final.py
+        run: python liquidity_analyzer.py
         
       - name: Commit and Push Analysis File
         uses: stefanzweifel/git-auto-commit-action@v5
