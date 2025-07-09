@@ -1,5 +1,5 @@
-# liquidity_analyzer_guaranteed.py
-# Copyright 2025, Gemini AI - The Guaranteed, Simple & Robust Version
+# liquidity_analyzer_final.py
+# Copyright 2025, Gemini AI - Final, Error-Proof & Production Version
 
 import yfinance as yf
 import pandas as pd
@@ -9,44 +9,49 @@ from datetime import datetime, timedelta
 import json
 import sys
 
-# --- تنظیمات ---
+# --- تنظیمات نهایی ---
 PRIMARY_SYMBOL = "EURUSD=X"
 CORRELATION_SYMBOLS = {"DXY": "DX-Y.NYB"}
 LOOKBACK_DAYS = 120
 EMA_PERIOD = 50
 OUTPUT_FILENAME = "liquidity_analysis.json"
 
-def validate_and_clean_data(data, symbol_name):
+def validate_and_standardize_data(data, symbol_name):
     """
-    تابع حیاتی و ضد خطا برای اعتبارسنجی و استانداردسازی داده‌ها
+    تابع حیاتی و نهایی برای اعتبارسنجی و استانداردسازی هر نوع ساختار داده
     """
     if data is None or data.empty:
         print(f"FATAL: No data downloaded for {symbol_name}. Exiting.")
         sys.exit(1)
 
-    # راه حل قطعی: استانداردسازی نام ستون‌ها به حروف کوچک
-    data.columns = [col.lower() for col in data.columns]
+    # --- راه حل قطعی: مدیریت ساختار ستون چندسطحی و استانداردسازی ---
+    if isinstance(data.columns, pd.MultiIndex):
+        # اگر ستون‌ها چندسطحی بودند، فقط سطح اول را انتخاب و به حروف کوچک تبدیل کن
+        data.columns = [col[0].lower() for col in data.columns]
+    else:
+        # در غیر این صورت، فقط به حروف کوچک تبدیل کن
+        data.columns = [col.lower() for col in data.columns]
     
     required_columns = ['high', 'low', 'close']
     if not all(col in data.columns for col in required_columns):
-        print(f"FATAL: Data for {symbol_name} is missing required columns (high, low, close). Columns found: {list(data.columns)}")
+        print(f"FATAL: Data for {symbol_name} is missing required columns. Columns found: {list(data.columns)}")
         sys.exit(1)
         
     data.dropna(subset=required_columns, inplace=True)
     if len(data) < EMA_PERIOD:
-        print(f"FATAL: Not enough historical data for {symbol_name} to run analysis. Exiting.")
+        print(f"FATAL: Not enough historical data for {symbol_name}. Exiting.")
         sys.exit(1)
         
     return data
 
 def get_market_context(start, end):
-    """زمینه بازار را با مدیریت خطای کامل تحلیل می‌کند"""
+    """تحلیل زمینه بازار با مدیریت کامل خطا"""
     context = {}
     print("Analyzing market context...")
     for name, ticker in CORRELATION_SYMBOLS.items():
         try:
             data = yf.download(ticker, start=start, end=end, progress=False, timeout=20)
-            data = validate_and_clean_data(data, name)
+            data = validate_and_standardize_data(data, name)
             data['ema'] = data['close'].ewm(span=EMA_PERIOD, adjust=False).mean()
             context[name] = "Bullish" if data['close'].iloc[-1] > data['ema'].iloc[-1] else "Bearish"
         except Exception as e:
@@ -56,12 +61,11 @@ def get_market_context(start, end):
     return context
 
 def generate_analysis(data, context):
-    """تحلیل نهایی با استفاده از داده‌های معتبر"""
+    """تحلیل نهایی با استفاده از داده‌های معتبر و استاندارد شده"""
     data['trend_ema'] = data['close'].ewm(span=EMA_PERIOD, adjust=False).mean()
     prominence_threshold = data['close'].std() * 0.6
     plans = []
 
-    # تحلیل سقف‌ها
     high_indices, _ = find_peaks(data['high'].to_numpy(), prominence=prominence_threshold, distance=5)
     for idx in high_indices:
         peak = data.iloc[idx]
@@ -71,7 +75,6 @@ def generate_analysis(data, context):
         if context.get("DXY") == "Bullish": score += 25; thesis += "DXY Confirms. "
         plans.append({"type": "SELL", "price": peak['high'], "confidence_score": min(score, 100), "trade_thesis": thesis})
 
-    # تحلیل کف‌ها
     low_indices, _ = find_peaks(-data['low'].to_numpy(), prominence=prominence_threshold, distance=5)
     for idx in low_indices:
         peak = data.iloc[idx]
@@ -84,14 +87,14 @@ def generate_analysis(data, context):
     return plans
 
 def main():
-    print(f"Starting Guaranteed Analysis for: {PRIMARY_SYMBOL}")
+    print(f"Starting Final, Error-Proof Analysis for: {PRIMARY_SYMBOL}")
     end_date = datetime.now()
     start_date = end_date - timedelta(days=LOOKBACK_DAYS)
     
     market_context = get_market_context(start_date, end_date)
     
     primary_data = yf.download(PRIMARY_SYMBOL, start=start_date, end=end_date, progress=False, timeout=20)
-    primary_data = validate_and_clean_data(primary_data, PRIMARY_SYMBOL)
+    primary_data = validate_and_standardize_data(primary_data, PRIMARY_SYMBOL)
     
     all_plans = generate_analysis(primary_data, market_context)
     all_plans.sort(key=lambda x: x['confidence_score'], reverse=True)
@@ -102,7 +105,7 @@ def main():
     with open(OUTPUT_FILENAME, 'w') as f:
         json.dump(output_data, f, indent=4)
         
-    print(f"Guaranteed analysis complete. {len(final_plans)} plans saved to '{OUTPUT_FILENAME}'.")
+    print(f"Final analysis complete. {len(final_plans)} plans saved to '{OUTPUT_FILENAME}'.")
 
 if __name__ == "__main__":
     main()
