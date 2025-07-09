@@ -1,17 +1,1 @@
-{
-    "last_update": "2025-07-09 22:55:27",
-    "trade_plans": [
-        {
-            "type": "BUY",
-            "price": 1.1075055599212646,
-            "confidence_score": 100,
-            "trade_thesis": "Buy Plan @ 1.10751. Pro-Trend. DXY Confirms. "
-        },
-        {
-            "type": "SELL",
-            "price": 1.1546543836593628,
-            "confidence_score": 50,
-            "trade_thesis": "Sell Plan @ 1.15465. "
-        }
-    ]
-}
+
