@@ -3,7 +3,7 @@ name: Run Multi-Currency Liquidity Analysis
 
 on:
   schedule:
-    - cron: '0 2 * * *' # اجرای روزانه
+    - cron: '*/5 * * * *' # اجرای روزانه
   workflow_dispatch:   # اجرای دستی
 
 # --- کلید حل مشکل اینجاست ---
