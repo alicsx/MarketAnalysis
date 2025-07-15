@@ -11,7 +11,7 @@ import sys
 
 # --- تنظیمات ---
 # نام نمادها را برای سادگی در کد، بدون "=X" نگه می‌داریم
-PRIMARY_SYMBOLS = ["EURUSD", "GBPUSD", "AUDUSD", "USDJPY", "USDCAD", "NZDUSD"]
+PRIMARY_SYMBOLS = ["EURUSD", "GBPUSD", "EURGBP", "AUDUSD", "USDJPY", "USDCAD", "NZDUSD"]
 CORRELATION_SYMBOLS = {"DXY": "DX-Y.NYB"}
 LOOKBACK_DAYS = 120
 EMA_PERIOD = 50
