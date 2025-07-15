@@ -16,7 +16,7 @@ DASHBOARD_FILE = "dashboard.html"
 
 # --- دیکشنری فیدهای RSS و جفت ارزها ---
 CURRENCY_RSS_FEEDS = {'USD':"https://www.investing.com/rss/news_1.rss",'EUR':"https://www.investing.com/rss/news_4.rss",'GBP':"https://www.investing.com/rss/news_6.rss",'JPY':"https://www.investing.com/rss/news_3.rss",'CAD':"https://www.investing.com/rss/news_10.rss",'AUD':"https://www.investing.com/rss/news_8.rss",'CHF':"https://www.investing.com/rss/news_7.rss",'World':"https://www.investing.com/rss/news_25.rss"}
-CURRENCY_PAIRS_YF = {"EURUSD":"EURUSD=X", "GBPUSD":"GBPUSD=X", "USDJPY":"USDJPY=X", "AUDUSD":"AUDUSD=X", "USDCAD":"USDCAD=X"}
+CURRENCY_PAIRS_YF = {"EURUSD":"EURUSD=X", "GBPUSD":"GBPUSD=X", "USDJPY":"USDJPY=X", "AUDUSD":"AUDUSD=X", "USDCAD":"USDCAD=X", "EURGBP":"EURGBP=X"}
 
 # --- بخش جدید: وزن‌دهی به هر ماژول تحلیلی ---
 # شما می‌توانید این وزن‌ها را برای تنظیم استراتژی تغییر دهید
