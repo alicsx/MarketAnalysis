@@ -15,7 +15,7 @@ OUTPUT_FILE = "sentiment.txt"
 DASHBOARD_FILE = "dashboard.html"
 
 # --- دیکشنری فیدهای RSS و جفت ارزها ---
-CURRENCY_RSS_FEEDS = {'USD':"https://www.investing.com/rss/news_1.rss",'EUR':"https://www.investing.com/rss/news_4.rss",'GBP':"https://www.investing.com/rss/news_6.rss",'JPY':"https://www.investing.com/rss/news_3.rss",'CAD':"https://www.investing.com/rss/news_10.rss",'AUD':"https://www.investing.com/rss/news_8.rss",'CHF':"https://www.investing.com/rss/news_7.rss",'World':"https://www.investing.com/rss/news_25.rss"}
+CURRENCY_RSS_FEEDS = {'USD':"https://www.investing.com/rss/news_1.rss",'EUR':"https://www.investing.com/rss/news_4.rss",'GBP':"https://www.investing.com/rss/news_6.rss",'JPY':"https://www.investing.com/rss/news_3.rss",'NZD':"https://www.rnz.co.nz/rss/business.xml",'CAD':"https://www.investing.com/rss/news_10.rss",'AUD':"https://www.investing.com/rss/news_8.rss",'CHF':"https://www.investing.com/rss/news_7.rss",'World':"https://www.investing.com/rss/news_25.rss"}
 CURRENCY_PAIRS_YF = {"EURUSD":"EURUSD=X", "GBPUSD":"GBPUSD=X", "USDJPY":"USDJPY=X", "AUDUSD":"AUDUSD=X", "AUDJPY":"AUDJPY=X", "GBPCAD":"GBPCAD=X", "GBPCHF":"GBPCHF=X", "NZDCAD":"NZDCAD=X", "EURCAD":"EURCAD=X", "USDCAD":"USDCAD=X", "EURGBP":"EURGBP=X"}
 
 # --- بخش جدید: وزن‌دهی به هر ماژول تحلیلی ---
