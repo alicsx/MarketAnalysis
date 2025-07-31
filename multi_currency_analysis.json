@@ -1,55 +1,37 @@
 {
-    "GBPUSD": {
-        "trade_plans": [
-            {
-                "type": "SELL",
-                "price": 1.3204457759857178,
-                "confidence_score": 75,
-                "timestamp": "2025.07.31 14:35",
-                "trade_thesis": "Sell Plan @ 1.32045. DXY Confirms. "
-            },
-            {
-                "type": "SELL",
-                "price": 1.3442305326461792,
-                "confidence_score": 75,
-                "timestamp": "2025.07.31 14:35",
-                "trade_thesis": "Sell Plan @ 1.34423. DXY Confirms. "
-            }
-        ]
-    },
-    "EURGBP": {
+    "EURCAD": {
         "trade_plans": [
             {
                 "type": "BUY",
-                "price": 0.8519399762153625,
+                "price": 1.5418599843978882,
                 "confidence_score": 75,
-                "timestamp": "2025.07.31 14:35",
-                "trade_thesis": "Buy Plan @ 0.85194. Pro-Trend. "
+                "timestamp": "2025.07.31 14:57",
+                "trade_thesis": "Buy Plan @ 1.54186. Pro-Trend. "
             },
             {
                 "type": "BUY",
-                "price": 0.8361999988555908,
+                "price": 1.5485299825668335,
                 "confidence_score": 75,
-                "timestamp": "2025.07.31 14:35",
-                "trade_thesis": "Buy Plan @ 0.83620. Pro-Trend. "
+                "timestamp": "2025.07.31 14:57",
+                "trade_thesis": "Buy Plan @ 1.54853. Pro-Trend. "
             }
         ]
     },
-    "USDCAD": {
+    "NZDCAD": {
         "trade_plans": [
             {
-                "type": "SELL",
-                "price": 1.4014999866485596,
+                "type": "BUY",
+                "price": 0.7833570241928101,
                 "confidence_score": 75,
-                "timestamp": "2025.07.31 14:35",
-                "trade_thesis": "Sell Plan @ 1.40150. Pro-Trend. "
+                "timestamp": "2025.07.31 14:57",
+                "trade_thesis": "Buy Plan @ 0.78336. Pro-Trend. "
             },
             {
-                "type": "SELL",
-                "price": 1.3860399723052979,
+                "type": "BUY",
+                "price": 0.815500020980835,
                 "confidence_score": 75,
-                "timestamp": "2025.07.31 14:35",
-                "trade_thesis": "Sell Plan @ 1.38604. Pro-Trend. "
+                "timestamp": "2025.07.31 14:57",
+                "trade_thesis": "Buy Plan @ 0.81550. Pro-Trend. "
             }
         ]
     }
