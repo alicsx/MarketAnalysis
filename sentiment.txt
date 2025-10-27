@@ -1,1 +1,1 @@
-{"market_regime": "Risk-On", "sentiments": {"USD": 3, "EUR": 0, "GBP": 0, "JPY": 0, "NZD": 3, "CAD": 2, "AUD": 2, "CHF": 0, "World": 5}}
+{"market_regime": "Risk-On", "sentiments": {"USD": 3, "EUR": 0, "GBP": 0, "JPY": 0, "NZD": 3, "CAD": 2, "AUD": 2, "CHF": 0, "World": 4}}
