@@ -1,1 +1,1 @@
-{"market_regime": "Neutral", "sentiments": {"USD": 2, "EUR": 0, "GBP": 0, "JPY": 0, "NZD": 0, "CAD": 0, "AUD": 0, "CHF": 0, "World": 5}}
+{"market_regime": "Neutral", "sentiments": {"USD": 2, "EUR": 0, "GBP": 0, "JPY": 0, "NZD": 0, "CAD": 0, "AUD": 0, "CHF": 0, "World": -2}}
