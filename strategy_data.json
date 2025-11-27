@@ -9,5 +9,9 @@
     "CHF": 1.0,
     "World": 0.5
   },
-  "last_prediction": {}
+  "last_prediction": {
+    "pair": "NZDCAD",
+    "predicted_move": -1,
+    "timestamp": "2025-11-27T23:54:23.292938"
+  }
 }
