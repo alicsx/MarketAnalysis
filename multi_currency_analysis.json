@@ -4,16 +4,16 @@
             {
                 "type": "SELL",
                 "price": 1.187295913696289,
-                "confidence_score": 75,
-                "timestamp": "2026.01.12 13:52",
-                "trade_thesis": "Sell Plan @ 1.18730. DXY Confirms. "
+                "confidence_score": 100,
+                "timestamp": "2026.01.12 14:26",
+                "trade_thesis": "Sell Plan @ 1.18730. Pro-Trend. DXY Confirms. "
             },
             {
                 "type": "SELL",
                 "price": 1.1778839826583862,
-                "confidence_score": 75,
-                "timestamp": "2026.01.12 13:52",
-                "trade_thesis": "Sell Plan @ 1.17788. DXY Confirms. "
+                "confidence_score": 100,
+                "timestamp": "2026.01.12 14:26",
+                "trade_thesis": "Sell Plan @ 1.17788. Pro-Trend. DXY Confirms. "
             }
         ]
     },
@@ -23,14 +23,14 @@
                 "type": "SELL",
                 "price": 1.352594256401062,
                 "confidence_score": 75,
-                "timestamp": "2026.01.12 13:52",
+                "timestamp": "2026.01.12 14:26",
                 "trade_thesis": "Sell Plan @ 1.35259. DXY Confirms. "
             },
             {
                 "type": "SELL",
                 "price": 1.3473457098007202,
                 "confidence_score": 75,
-                "timestamp": "2026.01.12 13:52",
+                "timestamp": "2026.01.12 14:26",
                 "trade_thesis": "Sell Plan @ 1.34735. DXY Confirms. "
             }
         ]
@@ -41,14 +41,14 @@
                 "type": "SELL",
                 "price": 0.8749399781227112,
                 "confidence_score": 75,
-                "timestamp": "2026.01.12 13:52",
+                "timestamp": "2026.01.12 14:26",
                 "trade_thesis": "Sell Plan @ 0.87494. Pro-Trend. "
             },
             {
                 "type": "SELL",
                 "price": 0.872409999370575,
                 "confidence_score": 75,
-                "timestamp": "2026.01.12 13:52",
+                "timestamp": "2026.01.12 14:26",
                 "trade_thesis": "Sell Plan @ 0.87241. Pro-Trend. "
             }
         ]
@@ -59,14 +59,14 @@
                 "type": "SELL",
                 "price": 0.6629980802536011,
                 "confidence_score": 75,
-                "timestamp": "2026.01.12 13:52",
+                "timestamp": "2026.01.12 14:26",
                 "trade_thesis": "Sell Plan @ 0.66300. DXY Confirms. "
             },
             {
                 "type": "SELL",
                 "price": 0.6617498397827148,
                 "confidence_score": 75,
-                "timestamp": "2026.01.12 13:52",
+                "timestamp": "2026.01.12 14:26",
                 "trade_thesis": "Sell Plan @ 0.66175. DXY Confirms. "
             }
         ]
@@ -77,14 +77,14 @@
                 "type": "BUY",
                 "price": 146.60899353027344,
                 "confidence_score": 100,
-                "timestamp": "2026.01.12 13:52",
+                "timestamp": "2026.01.12 14:26",
                 "trade_thesis": "Buy Plan @ 146.60899. Pro-Trend. DXY Confirms. "
             },
             {
                 "type": "BUY",
                 "price": 149.40699768066406,
                 "confidence_score": 100,
-                "timestamp": "2026.01.12 13:52",
+                "timestamp": "2026.01.12 14:26",
                 "trade_thesis": "Buy Plan @ 149.40700. Pro-Trend. DXY Confirms. "
             }
         ]
@@ -95,14 +95,14 @@
                 "type": "SELL",
                 "price": 1.40788996219635,
                 "confidence_score": 75,
-                "timestamp": "2026.01.12 13:52",
+                "timestamp": "2026.01.12 14:26",
                 "trade_thesis": "Sell Plan @ 1.40789. Pro-Trend. "
             },
             {
                 "type": "SELL",
                 "price": 1.413949966430664,
                 "confidence_score": 75,
-                "timestamp": "2026.01.12 13:52",
+                "timestamp": "2026.01.12 14:26",
                 "trade_thesis": "Sell Plan @ 1.41395. Pro-Trend. "
             }
         ]
@@ -113,14 +113,14 @@
                 "type": "SELL",
                 "price": 0.5843408107757568,
                 "confidence_score": 100,
-                "timestamp": "2026.01.12 13:52",
+                "timestamp": "2026.01.12 14:26",
                 "trade_thesis": "Sell Plan @ 0.58434. Pro-Trend. DXY Confirms. "
             },
             {
                 "type": "SELL",
                 "price": 0.5802012085914612,
                 "confidence_score": 100,
-                "timestamp": "2026.01.12 13:52",
+                "timestamp": "2026.01.12 14:26",
                 "trade_thesis": "Sell Plan @ 0.58020. Pro-Trend. DXY Confirms. "
             }
         ]
@@ -131,14 +131,14 @@
                 "type": "SELL",
                 "price": 1.6400799751281738,
                 "confidence_score": 75,
-                "timestamp": "2026.01.12 13:52",
+                "timestamp": "2026.01.12 14:26",
                 "trade_thesis": "Sell Plan @ 1.64008. Pro-Trend. "
             },
             {
                 "type": "SELL",
                 "price": 1.6465699672698975,
                 "confidence_score": 75,
-                "timestamp": "2026.01.12 13:52",
+                "timestamp": "2026.01.12 14:26",
                 "trade_thesis": "Sell Plan @ 1.64657. Pro-Trend. "
             }
         ]
@@ -149,14 +149,14 @@
                 "type": "BUY",
                 "price": 1.0666999816894531,
                 "confidence_score": 75,
-                "timestamp": "2026.01.12 13:52",
+                "timestamp": "2026.01.12 14:26",
                 "trade_thesis": "Buy Plan @ 1.06670. Pro-Trend. "
             },
             {
                 "type": "BUY",
                 "price": 1.0501999855041504,
                 "confidence_score": 75,
-                "timestamp": "2026.01.12 13:52",
+                "timestamp": "2026.01.12 14:26",
                 "trade_thesis": "Buy Plan @ 1.05020. Pro-Trend. "
             }
         ]
@@ -167,14 +167,14 @@
                 "type": "SELL",
                 "price": 0.8153160214424133,
                 "confidence_score": 75,
-                "timestamp": "2026.01.12 13:52",
+                "timestamp": "2026.01.12 14:26",
                 "trade_thesis": "Sell Plan @ 0.81532. Pro-Trend. "
             },
             {
                 "type": "SELL",
                 "price": 0.8086950182914734,
                 "confidence_score": 75,
-                "timestamp": "2026.01.12 13:52",
+                "timestamp": "2026.01.12 14:26",
                 "trade_thesis": "Sell Plan @ 0.80870. Pro-Trend. "
             }
         ]
