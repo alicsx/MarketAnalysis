@@ -1,1 +1,38 @@
-{}
+{
+    "EURUSD": {
+        "trade_plans": [
+            {
+                "type": "BUY",
+                "price": 1.16593599319458,
+                "confidence_score": 75,
+                "timestamp": "2026.01.21 15:15",
+                "trade_thesis": "Buy Plan @ 1.16594. Pro-Trend. "
+            },
+            {
+                "type": "BUY",
+                "price": 1.154521107673645,
+                "confidence_score": 75,
+                "timestamp": "2026.01.21 15:15",
+                "trade_thesis": "Buy Plan @ 1.15452. Pro-Trend. "
+            }
+        ]
+    },
+    "GBPCHF": {
+        "trade_plans": [
+            {
+                "type": "BUY",
+                "price": 1.0501999855041504,
+                "confidence_score": 75,
+                "timestamp": "2026.01.21 15:15",
+                "trade_thesis": "Buy Plan @ 1.05020. Pro-Trend. "
+            },
+            {
+                "type": "BUY",
+                "price": 1.0515700578689575,
+                "confidence_score": 75,
+                "timestamp": "2026.01.21 15:15",
+                "trade_thesis": "Buy Plan @ 1.05157. Pro-Trend. "
+            }
+        ]
+    }
+}
