@@ -1,17 +1,13 @@
 {
   "weights": {
-    "USD": 0.919788626243739,
+    "USD": 0.9381843987686138,
     "EUR": 1.0,
     "GBP": 1.0,
     "JPY": 1.1031977152103682,
     "CAD": 1.0,
-    "AUD": 0.9784329405491449,
+    "AUD": 0.958864281738162,
     "CHF": 1.0,
     "World": 0.5
   },
-  "last_prediction": {
-    "pair": "AUDUSD",
-    "predicted_move": 1,
-    "timestamp": "2026-07-14T15:49:49.631679"
-  }
+  "last_prediction": {}
 }
